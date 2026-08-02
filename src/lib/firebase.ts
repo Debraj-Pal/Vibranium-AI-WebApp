@@ -18,7 +18,8 @@ const app = initializeApp(firebaseConfig);
 
 // Initialize Firestore (use custom databaseId if configured, or default to system's databaseId if using the default system project)
 const customDbId = metaEnv.VITE_FIREBASE_DATABASE_ID;
-const systemDefaultDbId = metaEnv.VITE_FIREBASE_PROJECT_ID ? undefined : "ai-studio-e02cd6e0-fb0b-404c-a861-2b79907bb840";
+const isDefaultProject = !metaEnv.VITE_FIREBASE_PROJECT_ID || metaEnv.VITE_FIREBASE_PROJECT_ID === "stone-ivy-zttsj";
+const systemDefaultDbId = isDefaultProject ? "ai-studio-e02cd6e0-fb0b-404c-a861-2b79907bb840" : undefined;
 const dbId = customDbId !== undefined ? customDbId : systemDefaultDbId;
 
 export const db = dbId ? getFirestore(app, dbId) : getFirestore(app);
