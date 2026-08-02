@@ -9,8 +9,8 @@ dotenv.config();
 const app = express();
 const PORT = 3000;
 
-app.use(express.json({ limit: "50mb" }));
-app.use(express.urlencoded({ limit: "50mb", extended: true }));
+app.use(express.json({ limit: "50mb" } as any));
+app.use(express.urlencoded({ limit: "50mb", extended: true } as any));
 
 // Universal document text extractor for PDF, Word (.docx), Excel (.xlsx), PowerPoint (.pptx), CSV & TXT
 async function extractTextFromAttachedFile(file: { name: string; mimeType?: string; base64?: string; content?: string }): Promise<string> {
@@ -118,7 +118,7 @@ async function extractTextFromAttachedFile(file: { name: string; mimeType?: stri
 
 // Helper to get Gemini Client dynamically with latest env vars
 function getAiClient(): GoogleGenAI | null {
-  const apiKey = process.env.GEMINI_API_KEY;
+  const apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
   if (apiKey && apiKey.trim() !== "" && apiKey !== "MY_GEMINI_API_KEY") {
     try {
       return new GoogleGenAI({ apiKey: apiKey.trim() });
@@ -434,13 +434,14 @@ When the user asks about weather, climate, temperature, or location, proactively
 
       if (modelId && NON_GEMINI_MODELS[modelId]) {
         const info = NON_GEMINI_MODELS[modelId];
-        const openRouterKey = process.env.OPENROUTER_API_KEY || process.env.OPEN_ROUTER_API_KEY || process.env.OPENROUTER_KEY;
+        const openRouterKey = process.env.OPENROUTER_API_KEY || process.env.VITE_OPENROUTER_API_KEY || process.env.OPEN_ROUTER_API_KEY || process.env.OPENROUTER_KEY;
         
         let foundProviderKey: string | undefined = undefined;
         let foundEnvName: string | undefined = undefined;
         for (const envName of info.providerEnvKeys) {
-          if (process.env[envName] && process.env[envName]?.trim() !== '') {
-            foundProviderKey = process.env[envName]?.trim();
+          const val = process.env[envName] || process.env[`VITE_${envName}`];
+          if (val && val.trim() !== '') {
+            foundProviderKey = val.trim();
             foundEnvName = envName;
             break;
           }
