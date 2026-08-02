@@ -5,19 +5,20 @@ import fileConfig from '../../firebase-applet-config.json';
 
 const metaEnv = (import.meta as any).env || {};
 
+const currentProjectId = metaEnv.VITE_FIREBASE_PROJECT_ID || fileConfig.projectId || "vibranium-web-app";
+const isDefaultProject = currentProjectId === "stone-ivy-zttsj";
+
 const defaultFirebaseConfig = {
-  apiKey: metaEnv.VITE_FIREBASE_API_KEY || fileConfig.apiKey || "AIzaSyBL-flLKwmXVw6lpk0USUl3Ih557MOyv3w",
-  authDomain: metaEnv.VITE_FIREBASE_AUTH_DOMAIN || fileConfig.authDomain || "stone-ivy-zttsj.firebaseapp.com",
-  projectId: metaEnv.VITE_FIREBASE_PROJECT_ID || fileConfig.projectId || "stone-ivy-zttsj",
-  storageBucket: metaEnv.VITE_FIREBASE_STORAGE_BUCKET || fileConfig.storageBucket || "stone-ivy-zttsj.firebasestorage.app",
-  messagingSenderId: metaEnv.VITE_FIREBASE_MESSAGING_SENDER_ID || fileConfig.messagingSenderId || "349153338672",
-  appId: metaEnv.VITE_FIREBASE_APP_ID || fileConfig.appId || "1:349153338672:web:5c11a623bdb836e27c94f5"
+  apiKey: metaEnv.VITE_FIREBASE_API_KEY || fileConfig.apiKey || (isDefaultProject ? "AIzaSyBL-flLKwmXVw6lpk0USUl3Ih557MOyv3w" : "AIzaSyB4p4Gi530QV2hwIH3qfiHgBEp8yOk3Lpc"),
+  authDomain: metaEnv.VITE_FIREBASE_AUTH_DOMAIN || fileConfig.authDomain || (isDefaultProject ? "stone-ivy-zttsj.firebaseapp.com" : "vibranium-web-app.firebaseapp.com"),
+  projectId: currentProjectId,
+  storageBucket: metaEnv.VITE_FIREBASE_STORAGE_BUCKET || fileConfig.storageBucket || (isDefaultProject ? "stone-ivy-zttsj.firebasestorage.app" : "vibranium-web-app.firebasestorage.app"),
+  messagingSenderId: metaEnv.VITE_FIREBASE_MESSAGING_SENDER_ID || fileConfig.messagingSenderId || (isDefaultProject ? "349153338672" : "982250496279"),
+  appId: metaEnv.VITE_FIREBASE_APP_ID || fileConfig.appId || (isDefaultProject ? "1:349153338672:web:5c11a623bdb836e27c94f5" : "1:982250496279:web:75e930e0e3220898abd752")
 };
 
 // Default Firestore configuration
 const customDbId = metaEnv.VITE_FIREBASE_DATABASE_ID;
-const currentProjectId = metaEnv.VITE_FIREBASE_PROJECT_ID || fileConfig.projectId || "stone-ivy-zttsj";
-const isDefaultProject = currentProjectId === "stone-ivy-zttsj";
 const systemDefaultDbId = isDefaultProject ? "ai-studio-e02cd6e0-fb0b-404c-a861-2b79907bb840" : (fileConfig.firestoreDatabaseId || undefined);
 const defaultDbId = customDbId !== undefined ? customDbId : systemDefaultDbId;
 

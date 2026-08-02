@@ -6,5 +6,6 @@
   "firestoreDatabaseId": "(default)",
   "storageBucket": "vibranium-web-app.firebasestorage.app",
   "messagingSenderId": "982250496279",
-  "measurementId": "G-C4DR5Y1L5L"
+  "measurementId": "",
+  "recaptchaSiteKey": ""
 }

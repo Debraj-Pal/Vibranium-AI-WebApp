@@ -3,6 +3,7 @@ import path from "path";
 import dotenv from "dotenv";
 import fs from "fs";
 import { GoogleGenAI, ThinkingLevel, GenerateVideosOperation } from "@google/genai";
+import fileConfig from "./firebase-applet-config.json";
 
 dotenv.config();
 
@@ -14,27 +15,19 @@ app.use(express.urlencoded({ limit: "50mb", extended: true } as any));
 
 // Dynamic Firebase Configuration API
 app.get("/api/firebase-config", (req, res) => {
-  let fileConfig: any = {};
-  try {
-    const configPath = path.join(process.cwd(), "firebase-applet-config.json");
-    if (fs.existsSync(configPath)) {
-      fileConfig = JSON.parse(fs.readFileSync(configPath, "utf8"));
-    }
-  } catch (err) {
-    console.error("Error reading firebase-applet-config.json:", err);
-  }
 
-  const projectId = process.env.VITE_FIREBASE_PROJECT_ID || process.env.FIREBASE_PROJECT_ID || fileConfig.projectId || "stone-ivy-zttsj";
+
+  const projectId = process.env.VITE_FIREBASE_PROJECT_ID || process.env.FIREBASE_PROJECT_ID || fileConfig.projectId || "vibranium-web-app";
   const isDefaultProj = projectId === "stone-ivy-zttsj";
 
   const config = {
-    apiKey: process.env.VITE_FIREBASE_API_KEY || process.env.FIREBASE_API_KEY || fileConfig.apiKey || "AIzaSyBL-flLKwmXVw6lpk0USUl3Ih557MOyv3w",
-    authDomain: process.env.VITE_FIREBASE_AUTH_DOMAIN || process.env.FIREBASE_AUTH_DOMAIN || fileConfig.authDomain || "stone-ivy-zttsj.firebaseapp.com",
+    apiKey: process.env.VITE_FIREBASE_API_KEY || process.env.FIREBASE_API_KEY || fileConfig.apiKey || (isDefaultProj ? "AIzaSyBL-flLKwmXVw6lpk0USUl3Ih557MOyv3w" : "AIzaSyB4p4Gi530QV2hwIH3qfiHgBEp8yOk3Lpc"),
+    authDomain: process.env.VITE_FIREBASE_AUTH_DOMAIN || process.env.FIREBASE_AUTH_DOMAIN || fileConfig.authDomain || (isDefaultProj ? "stone-ivy-zttsj.firebaseapp.com" : "vibranium-web-app.firebaseapp.com"),
     projectId: projectId,
-    storageBucket: process.env.VITE_FIREBASE_STORAGE_BUCKET || process.env.FIREBASE_STORAGE_BUCKET || fileConfig.storageBucket || "stone-ivy-zttsj.firebasestorage.app",
-    messagingSenderId: process.env.VITE_FIREBASE_MESSAGING_SENDER_ID || process.env.FIREBASE_MESSAGING_SENDER_ID || fileConfig.messagingSenderId || "349153338672",
-    appId: process.env.VITE_FIREBASE_APP_ID || process.env.FIREBASE_APP_ID || fileConfig.appId || "1:349153338672:web:5c11a623bdb836e27c94f5",
-    databaseId: process.env.VITE_FIREBASE_DATABASE_ID || process.env.FIREBASE_DATABASE_ID || fileConfig.firestoreDatabaseId || (isDefaultProj ? "ai-studio-e02cd6e0-fb0b-404c-a861-2b79907bb840" : "")
+    storageBucket: process.env.VITE_FIREBASE_STORAGE_BUCKET || process.env.FIREBASE_STORAGE_BUCKET || fileConfig.storageBucket || (isDefaultProj ? "stone-ivy-zttsj.firebasestorage.app" : "vibranium-web-app.firebasestorage.app"),
+    messagingSenderId: process.env.VITE_FIREBASE_MESSAGING_SENDER_ID || process.env.FIREBASE_MESSAGING_SENDER_ID || fileConfig.messagingSenderId || (isDefaultProj ? "349153338672" : "982250496279"),
+    appId: process.env.VITE_FIREBASE_APP_ID || process.env.FIREBASE_APP_ID || fileConfig.appId || (isDefaultProj ? "1:349153338672:web:5c11a623bdb836e27c94f5" : "1:982250496279:web:75e930e0e3220898abd752"),
+    databaseId: process.env.VITE_FIREBASE_DATABASE_ID || process.env.FIREBASE_DATABASE_ID || fileConfig.firestoreDatabaseId || (isDefaultProj ? "ai-studio-e02cd6e0-fb0b-404c-a861-2b79907bb840" : "(default)")
   };
 
   res.json(config);
