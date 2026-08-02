@@ -1,0 +1,6 @@
+{
+  "name": "Vibranium AI",
+  "description": "Vibranium AI is a highly sophisticated, dark-themed AI Chatbot assistant. It features built-in translations, customizable Ollama settings, message persistence, and more.",
+  "requestFramePermissions": ["camera", "microphone", "geolocation"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
