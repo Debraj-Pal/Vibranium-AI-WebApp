@@ -9,12 +9,12 @@ const currentProjectId = metaEnv.VITE_FIREBASE_PROJECT_ID || fileConfig.projectI
 const isDefaultProject = currentProjectId === "stone-ivy-zttsj";
 
 const defaultFirebaseConfig = {
-  apiKey: metaEnv.VITE_FIREBASE_API_KEY || fileConfig.apiKey || (isDefaultProject ? "AIzaSyBL-flLKwmXVw6lpk0USUl3Ih557MOyv3w" : "AIzaSyB4p4Gi530QV2hwIH3qfiHgBEp8yOk3Lpc"),
-  authDomain: metaEnv.VITE_FIREBASE_AUTH_DOMAIN || fileConfig.authDomain || (isDefaultProject ? "stone-ivy-zttsj.firebaseapp.com" : "vibranium-web-app.firebaseapp.com"),
+  apiKey: metaEnv.VITE_FIREBASE_API_KEY || fileConfig.apiKey || "",
+  authDomain: metaEnv.VITE_FIREBASE_AUTH_DOMAIN || fileConfig.authDomain || "",
   projectId: currentProjectId,
-  storageBucket: metaEnv.VITE_FIREBASE_STORAGE_BUCKET || fileConfig.storageBucket || (isDefaultProject ? "stone-ivy-zttsj.firebasestorage.app" : "vibranium-web-app.firebasestorage.app"),
-  messagingSenderId: metaEnv.VITE_FIREBASE_MESSAGING_SENDER_ID || fileConfig.messagingSenderId || (isDefaultProject ? "349153338672" : "982250496279"),
-  appId: metaEnv.VITE_FIREBASE_APP_ID || fileConfig.appId || (isDefaultProject ? "1:349153338672:web:5c11a623bdb836e27c94f5" : "1:982250496279:web:75e930e0e3220898abd752")
+  storageBucket: metaEnv.VITE_FIREBASE_STORAGE_BUCKET || fileConfig.storageBucket || "",
+  messagingSenderId: metaEnv.VITE_FIREBASE_MESSAGING_SENDER_ID || fileConfig.messagingSenderId || "",
+  appId: metaEnv.VITE_FIREBASE_APP_ID || fileConfig.appId || ""
 };
 
 // Default Firestore configuration
