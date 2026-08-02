@@ -180,25 +180,63 @@ export default function App() {
   // Sync / Subscribe to Conversations list
   const loadConversations = () => {
     if (currentUser) {
-      const q = query(
-        collection(db, 'users', currentUser.uid, 'conversations'),
-        orderBy('createdAt', 'desc')
-      );
-      const unsubscribe = onSnapshot(q, (snapshot) => {
-        const list: Conversation[] = [];
-        snapshot.forEach((docSnap) => {
-          list.push({ id: docSnap.id, ...docSnap.data() } as Conversation);
+      try {
+        const q = query(
+          collection(db, 'users', currentUser.uid, 'conversations'),
+          orderBy('createdAt', 'desc')
+        );
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+          const list: Conversation[] = [];
+          snapshot.forEach((docSnap) => {
+            list.push({ id: docSnap.id, ...docSnap.data() } as Conversation);
+          });
+          
+          // Merge any local fallback conversations (with 'local_' prefix)
+          const local = localStorage.getItem('vibranium_guest_conversations');
+          if (local) {
+            try {
+              const localList = JSON.parse(local) as Conversation[];
+              const localConvs = localList.filter(c => c.id.startsWith('local_'));
+              setConversations([...localConvs, ...list]);
+            } catch (e) {
+              setConversations(list);
+            }
+          } else {
+            setConversations(list);
+          }
+        }, (err) => {
+          console.error("Firestore conversations subscription error:", err);
+          // Fallback to local storage (Guest mode / Local fallbacks)
+          const local = localStorage.getItem('vibranium_guest_conversations');
+          if (local) {
+            try {
+              setConversations(JSON.parse(local));
+            } catch (e) {
+              setConversations([]);
+            }
+          }
         });
-        setConversations(list);
-      }, (err) => {
-        console.error("Firestore conversations subscription error:", err);
-      });
-      return unsubscribe;
+        return unsubscribe;
+      } catch (err) {
+        console.error("Firestore query creation failed:", err);
+        const local = localStorage.getItem('vibranium_guest_conversations');
+        if (local) {
+          try {
+            setConversations(JSON.parse(local));
+          } catch (e) {
+            setConversations([]);
+          }
+        }
+      }
     } else {
       // Guest state load
       const local = localStorage.getItem('vibranium_guest_conversations');
       if (local) {
-        setConversations(JSON.parse(local));
+        try {
+          setConversations(JSON.parse(local));
+        } catch (e) {
+          setConversations([]);
+        }
       } else {
         setConversations([]);
       }
@@ -283,7 +321,7 @@ export default function App() {
     if (currentChatId === id) {
       setCurrentChatId(null);
     }
-    if (currentUser) {
+    if (currentUser && !id.startsWith('local_')) {
       try {
         await deleteDoc(doc(db, 'users', currentUser.uid, 'conversations', id));
       } catch (err) {
@@ -292,9 +330,11 @@ export default function App() {
     } else {
       const existing = localStorage.getItem('vibranium_guest_conversations');
       if (existing) {
-        const list = JSON.parse(existing) as Conversation[];
-        const updatedList = list.filter(c => c.id !== id);
-        localStorage.setItem('vibranium_guest_conversations', JSON.stringify(updatedList));
+        try {
+          const list = JSON.parse(existing) as Conversation[];
+          const updatedList = list.filter(c => c.id !== id);
+          localStorage.setItem('vibranium_guest_conversations', JSON.stringify(updatedList));
+        } catch (e) {}
       }
       localStorage.removeItem(`vibranium_msg_${id}`);
       loadConversations();
@@ -313,21 +353,33 @@ export default function App() {
     const conv = conversations.find(c => c.id === id);
     if (!conv) return;
     const nextPinned = !conv.isPinned;
-    if (currentUser) {
+    if (currentUser && !id.startsWith('local_')) {
       try {
         await updateDoc(doc(db, 'users', currentUser.uid, 'conversations', id), {
           isPinned: nextPinned
         });
       } catch (err) {
-        console.error("Failed to pin chat in Firestore:", err);
+        console.error("Failed to pin chat in Firestore, falling back to local:", err);
+        // Fallback: update locally
+        const existing = localStorage.getItem('vibranium_guest_conversations');
+        if (existing) {
+          try {
+            const list = JSON.parse(existing) as Conversation[];
+            const updatedList = list.map(c => c.id === id ? { ...c, isPinned: nextPinned } : c);
+            localStorage.setItem('vibranium_guest_conversations', JSON.stringify(updatedList));
+            loadConversations();
+          } catch (e) {}
+        }
       }
     } else {
       const existing = localStorage.getItem('vibranium_guest_conversations');
       if (existing) {
-        const list = JSON.parse(existing) as Conversation[];
-        const updatedList = list.map(c => c.id === id ? { ...c, isPinned: nextPinned } : c);
-        localStorage.setItem('vibranium_guest_conversations', JSON.stringify(updatedList));
-        loadConversations();
+        try {
+          const list = JSON.parse(existing) as Conversation[];
+          const updatedList = list.map(c => c.id === id ? { ...c, isPinned: nextPinned } : c);
+          localStorage.setItem('vibranium_guest_conversations', JSON.stringify(updatedList));
+          loadConversations();
+        } catch (e) {}
       }
     }
   };
@@ -345,22 +397,34 @@ export default function App() {
     if (!chatToRename || !renameInput.trim()) return;
     const id = chatToRename.id;
     const newTitle = renameInput.trim();
-    if (currentUser) {
+    if (currentUser && !id.startsWith('local_')) {
       try {
         await updateDoc(doc(db, 'users', currentUser.uid, 'conversations', id), {
           title: newTitle,
           updatedAt: serverTimestamp()
         });
       } catch (err) {
-        console.error("Failed to rename chat in Firestore:", err);
+        console.error("Failed to rename chat in Firestore, falling back to local:", err);
+        // Fallback: update locally
+        const existing = localStorage.getItem('vibranium_guest_conversations');
+        if (existing) {
+          try {
+            const list = JSON.parse(existing) as Conversation[];
+            const updatedList = list.map(c => c.id === id ? { ...c, title: newTitle, updatedAt: Date.now() } : c);
+            localStorage.setItem('vibranium_guest_conversations', JSON.stringify(updatedList));
+            loadConversations();
+          } catch (e) {}
+        }
       }
     } else {
       const existing = localStorage.getItem('vibranium_guest_conversations');
       if (existing) {
-        const list = JSON.parse(existing) as Conversation[];
-        const updatedList = list.map(c => c.id === id ? { ...c, title: newTitle, updatedAt: Date.now() } : c);
-        localStorage.setItem('vibranium_guest_conversations', JSON.stringify(updatedList));
-        loadConversations();
+        try {
+          const list = JSON.parse(existing) as Conversation[];
+          const updatedList = list.map(c => c.id === id ? { ...c, title: newTitle, updatedAt: Date.now() } : c);
+          localStorage.setItem('vibranium_guest_conversations', JSON.stringify(updatedList));
+          loadConversations();
+        } catch (e) {}
       }
     }
     setChatToRename(null);
@@ -375,7 +439,7 @@ export default function App() {
 
     try {
       let msgs: Message[] = [];
-      if (currentUser) {
+      if (currentUser && !id.startsWith('local_')) {
         // Query messages from Firestore
         const msgQuery = query(
           collection(db, 'users', currentUser.uid, 'conversations', id, 'messages'),

@@ -550,38 +550,68 @@ export default function ChatArea({
 
       if (!isMounted) return;
 
-      if (currentUser) {
-        // Subscribing to messages of this conversation in Firestore
-        const msgQuery = query(
-          collection(db, 'users', currentUser.uid, 'conversations', currentChatId, 'messages'),
-          orderBy('timestamp', 'asc')
-        );
+      if (currentUser && !currentChatId.startsWith('local_')) {
+        try {
+          // Subscribing to messages of this conversation in Firestore
+          const msgQuery = query(
+            collection(db, 'users', currentUser.uid, 'conversations', currentChatId, 'messages'),
+            orderBy('timestamp', 'asc')
+          );
 
-        unsubscribe = onSnapshot(msgQuery, (snapshot) => {
-          const list: Message[] = [];
-          snapshot.forEach((docSnap) => {
-            // Use serverTimestamps: 'estimate' so pending writes don't evaluate to null
-            const data = docSnap.data({ serverTimestamps: 'estimate' });
-            list.push({ id: docSnap.id, ...data } as Message);
+          unsubscribe = onSnapshot(msgQuery, (snapshot) => {
+            const list: Message[] = [];
+            snapshot.forEach((docSnap) => {
+              // Use serverTimestamps: 'estimate' so pending writes don't evaluate to null
+              const data = docSnap.data({ serverTimestamps: 'estimate' });
+              list.push({ id: docSnap.id, ...data } as Message);
+            });
+
+            // Explicitly sort list chronologically so user prompt comes before assistant answer
+            list.sort((a, b) => {
+              const tA = getMessageTime(a);
+              const tB = getMessageTime(b);
+              if (tA !== tB && tA > 0 && tB > 0) return tA - tB;
+              if (tA > 0 && tB === 0) return -1;
+              if (tA === 0 && tB > 0) return 1;
+              // If timestamps are equal or missing, ensure user prompt comes before assistant response
+              if (a.role === 'user' && b.role === 'assistant') return -1;
+              if (a.role === 'assistant' && b.role === 'user') return 1;
+              return 0;
+            });
+
+            setMessages(list);
+          }, (err) => {
+            console.error("Firestore message subscription failed:", err);
+            // Fallback guest storage
+            const localMsg = localStorage.getItem(`vibranium_msg_${currentChatId}`);
+            if (localMsg) {
+              try {
+                const list: Message[] = JSON.parse(localMsg);
+                list.sort((a, b) => getMessageTime(a) - getMessageTime(b));
+                setMessages(list);
+              } catch (e) {
+                setMessages([]);
+              }
+            } else {
+              setMessages([]);
+            }
           });
-
-          // Explicitly sort list chronologically so user prompt comes before assistant answer
-          list.sort((a, b) => {
-            const tA = getMessageTime(a);
-            const tB = getMessageTime(b);
-            if (tA !== tB && tA > 0 && tB > 0) return tA - tB;
-            if (tA > 0 && tB === 0) return -1;
-            if (tA === 0 && tB > 0) return 1;
-            // If timestamps are equal or missing, ensure user prompt comes before assistant response
-            if (a.role === 'user' && b.role === 'assistant') return -1;
-            if (a.role === 'assistant' && b.role === 'user') return 1;
-            return 0;
-          });
-
-          setMessages(list);
-        }, (err) => {
-          console.error("Firestore message subscription failed:", err);
-        });
+        } catch (e) {
+          console.error("Failed to construct Firestore message subscription query:", e);
+          // Fallback guest storage
+          const localMsg = localStorage.getItem(`vibranium_msg_${currentChatId}`);
+          if (localMsg) {
+            try {
+              const list: Message[] = JSON.parse(localMsg);
+              list.sort((a, b) => getMessageTime(a) - getMessageTime(b));
+              setMessages(list);
+            } catch (e) {
+              setMessages([]);
+            }
+          } else {
+            setMessages([]);
+          }
+        }
       } else {
         // Fallback guest storage
         const localMsg = localStorage.getItem(`vibranium_msg_${currentChatId}`);
@@ -825,17 +855,31 @@ export default function ChatArea({
         let aiTitle = (data.reply || '').trim();
         aiTitle = aiTitle.replace(/^["'«]+|["'»]+$/g, '').replace(/\.$/, '').trim();
         if (aiTitle && aiTitle.length >= 3 && aiTitle.length <= 40) {
-          if (currentUser) {
-            await updateDoc(doc(db, 'users', currentUser.uid, 'conversations', convId), {
-              title: aiTitle,
-              updatedAt: serverTimestamp()
-            });
+          if (currentUser && !convId.startsWith('local_')) {
+            try {
+              await updateDoc(doc(db, 'users', currentUser.uid, 'conversations', convId), {
+                title: aiTitle,
+                updatedAt: serverTimestamp()
+              });
+            } catch (err) {
+              console.warn("Failed to update AI title in Firestore, falling back to local:", err);
+              const existing = localStorage.getItem('vibranium_guest_conversations');
+              if (existing) {
+                try {
+                  const list = JSON.parse(existing) as Conversation[];
+                  const updated = list.map(c => c.id === convId ? { ...c, title: aiTitle } : c);
+                  localStorage.setItem('vibranium_guest_conversations', JSON.stringify(updated));
+                } catch (e) {}
+              }
+            }
           } else {
             const existing = localStorage.getItem('vibranium_guest_conversations');
             if (existing) {
-              const list = JSON.parse(existing) as Conversation[];
-              const updated = list.map(c => c.id === convId ? { ...c, title: aiTitle } : c);
-              localStorage.setItem('vibranium_guest_conversations', JSON.stringify(updated));
+              try {
+                const list = JSON.parse(existing) as Conversation[];
+                const updated = list.map(c => c.id === convId ? { ...c, title: aiTitle } : c);
+                localStorage.setItem('vibranium_guest_conversations', JSON.stringify(updated));
+              } catch (e) {}
             }
           }
           onRefreshConversations();
@@ -853,14 +897,33 @@ export default function ChatArea({
 
     let convId = '';
     if (currentUser) {
-      const convRef = await addDoc(collection(db, 'users', currentUser.uid, 'conversations'), {
-        title: smartTitle,
-        userId: currentUser.uid,
-        lastMessageSnippet: initialSnippet,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp()
-      });
-      convId = convRef.id;
+      try {
+        const convRef = await addDoc(collection(db, 'users', currentUser.uid, 'conversations'), {
+          title: smartTitle,
+          userId: currentUser.uid,
+          lastMessageSnippet: initialSnippet,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp()
+        });
+        convId = convRef.id;
+      } catch (firestoreErr: any) {
+        console.error("Firestore createNewConversation error, falling back to local storage:", firestoreErr);
+        // Fallback to local storage (Guest/Fallback mode)
+        convId = 'local_' + Date.now().toString();
+        const newConv: Conversation = {
+          id: convId,
+          title: smartTitle,
+          userId: 'guest',
+          lastMessageSnippet: initialSnippet,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        };
+        const existing = localStorage.getItem('vibranium_guest_conversations');
+        const list = existing ? JSON.parse(existing) : [];
+        list.unshift(newConv);
+        localStorage.setItem('vibranium_guest_conversations', JSON.stringify(list));
+        convId = newConv.id;
+      }
     } else {
       convId = 'conv_' + Date.now().toString();
       const newConv: Conversation = {
@@ -944,15 +1007,45 @@ export default function ChatArea({
 
     const snippetText = stripMarkdown(content).substring(0, 300);
 
-    if (currentUser) {
-      await addDoc(collection(db, 'users', currentUser.uid, 'conversations', convId, 'messages'), msgData);
+    if (currentUser && !convId.startsWith('local_')) {
       try {
-        await updateDoc(doc(db, 'users', currentUser.uid, 'conversations', convId), {
-          lastMessageSnippet: snippetText,
-          updatedAt: serverTimestamp()
-        });
-      } catch (err) {
-        // ignore update snippet error
+        await addDoc(collection(db, 'users', currentUser.uid, 'conversations', convId, 'messages'), msgData);
+        try {
+          await updateDoc(doc(db, 'users', currentUser.uid, 'conversations', convId), {
+            lastMessageSnippet: snippetText,
+            updatedAt: serverTimestamp()
+          });
+        } catch (err) {
+          // ignore update snippet error
+        }
+      } catch (firestoreErr: any) {
+        console.error("Firestore addMessageToDatabase error, falling back to localStorage:", firestoreErr);
+        // Fallback: save to localStorage
+        const localMsgKey = `vibranium_msg_${convId}`;
+        const existing = localStorage.getItem(localMsgKey);
+        const list = existing ? JSON.parse(existing) : [];
+        const localMsgData = { ...msgData, timestamp: new Date().toISOString() };
+        list.push({ id: 'msg_' + Date.now().toString(), ...localMsgData });
+        list.sort((a: Message, b: Message) => getMessageTime(a) - getMessageTime(b));
+
+        // Update guest conversation snippet
+        const existingConvs = localStorage.getItem('vibranium_guest_conversations');
+        if (existingConvs) {
+          try {
+            const convList = JSON.parse(existingConvs) as Conversation[];
+            const updated = convList.map(c => c.id === convId ? { ...c, lastMessageSnippet: snippetText, updatedAt: new Date().toISOString() } : c);
+            localStorage.setItem('vibranium_guest_conversations', JSON.stringify(updated));
+          } catch (e) {
+            // ignore
+          }
+        }
+
+        try {
+          localStorage.setItem(localMsgKey, JSON.stringify(list));
+          setMessages(list);
+        } catch (e: any) {
+          console.warn("localStorage quota exceeded:", e);
+        }
       }
     } else {
       const localMsgKey = `vibranium_msg_${convId}`;
