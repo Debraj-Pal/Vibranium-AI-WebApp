@@ -4,6 +4,7 @@ import { onAuthStateChanged } from 'firebase/auth';
 import { collection, query, orderBy, onSnapshot, doc, deleteDoc, addDoc, serverTimestamp, setDoc, updateDoc, getDoc, getDocs } from 'firebase/firestore';
 import { UserSettings, Conversation, stripMarkdown, Message } from './types';
 import { Menu, Share2, Copy, Check } from 'lucide-react';
+import { Analytics } from '@vercel/analytics/react';
 
 // Import components
 import Sidebar from './components/Sidebar';
@@ -519,6 +520,7 @@ export default function App() {
 
   return (
     <div className={`flex h-screen w-screen overflow-hidden text-gray-200 ${getThemeBackground()} ${getFontSizeClass()}`}>
+      <Analytics />
       
       {/* Mobile/Tablet Overlay Backdrop for Sidebar */}
       {isSidebarOpen && (
