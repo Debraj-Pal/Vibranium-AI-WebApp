@@ -1,25 +1,24 @@
 import { initializeApp, getApps, deleteApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
-import fileConfig from '../../firebase-applet-config.json';
 
 const metaEnv = (import.meta as any).env || {};
 
-const currentProjectId = metaEnv.VITE_FIREBASE_PROJECT_ID || fileConfig.projectId || "vibranium-web-app";
+const currentProjectId = metaEnv.VITE_FIREBASE_PROJECT_ID || "vibranium-web-app";
 const isDefaultProject = currentProjectId === "stone-ivy-zttsj";
 
 const defaultFirebaseConfig = {
-  apiKey: metaEnv.VITE_FIREBASE_API_KEY || fileConfig.apiKey || "",
-  authDomain: metaEnv.VITE_FIREBASE_AUTH_DOMAIN || fileConfig.authDomain || "",
+  apiKey: metaEnv.VITE_FIREBASE_API_KEY || "",
+  authDomain: metaEnv.VITE_FIREBASE_AUTH_DOMAIN || "",
   projectId: currentProjectId,
-  storageBucket: metaEnv.VITE_FIREBASE_STORAGE_BUCKET || fileConfig.storageBucket || "",
-  messagingSenderId: metaEnv.VITE_FIREBASE_MESSAGING_SENDER_ID || fileConfig.messagingSenderId || "",
-  appId: metaEnv.VITE_FIREBASE_APP_ID || fileConfig.appId || ""
+  storageBucket: metaEnv.VITE_FIREBASE_STORAGE_BUCKET || "",
+  messagingSenderId: metaEnv.VITE_FIREBASE_MESSAGING_SENDER_ID || "",
+  appId: metaEnv.VITE_FIREBASE_APP_ID || ""
 };
 
 // Default Firestore configuration
 const customDbId = metaEnv.VITE_FIREBASE_DATABASE_ID;
-const systemDefaultDbId = isDefaultProject ? "ai-studio-e02cd6e0-fb0b-404c-a861-2b79907bb840" : (fileConfig.firestoreDatabaseId || undefined);
+const systemDefaultDbId = isDefaultProject ? "ai-studio-e02cd6e0-fb0b-404c-a861-2b79907bb840" : undefined;
 const defaultDbId = customDbId !== undefined ? customDbId : systemDefaultDbId;
 
 // Initialize statically with default configurations first to prevent load-time errors

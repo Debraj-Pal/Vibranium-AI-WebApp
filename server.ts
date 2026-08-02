@@ -3,7 +3,6 @@ import path from "path";
 import dotenv from "dotenv";
 import fs from "fs";
 import { GoogleGenAI, ThinkingLevel, GenerateVideosOperation } from "@google/genai";
-import fileConfig from "./firebase-applet-config.json";
 
 dotenv.config();
 
@@ -28,6 +27,15 @@ app.use((req, res, next) => {
 app.get("/api/firebase-config", (req, res) => {
 
 
+  let fileConfig: any = {};
+  try {
+    const configPath = path.join(process.cwd(), "firebase-applet-config.json");
+    if (fs.existsSync(configPath)) {
+      fileConfig = JSON.parse(fs.readFileSync(configPath, "utf8"));
+    }
+  } catch (e) {
+    console.warn("Could not dynamically load firebase-applet-config.json:", e);
+  }
   const projectId = process.env.VITE_FIREBASE_PROJECT_ID || process.env.FIREBASE_PROJECT_ID || fileConfig.projectId || "vibranium-web-app";
   const isDefaultProj = projectId === "stone-ivy-zttsj";
 
