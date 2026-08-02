@@ -1824,7 +1824,9 @@ if (process.env.NODE_ENV === "production") {
   }).then((vite) => {
     app.use(vite.middlewares);
   });
+}
 
+if (!process.env.VERCEL) {
   app.listen(PORT, "0.0.0.0", () => {
     console.log(`Vibranium AI backend running on http://localhost:${PORT}`);
   });
