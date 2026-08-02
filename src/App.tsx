@@ -104,8 +104,10 @@ export default function App() {
           setUserPlan('free');
         });
       } else {
-        // Logged out / guest user: always reset to free
+        // Logged out / guest user: always reset to free and clear current active chat and conversations list
         setUserPlan('free');
+        setCurrentChatId(null);
+        setConversations([]);
       }
     });
 
@@ -177,6 +179,16 @@ export default function App() {
     });
   };
 
+  const getConversationsKey = (id?: string) => {
+    if (currentUser) {
+      if (id && !id.startsWith('local_')) {
+        return null;
+      }
+      return `vibranium_user_${currentUser.uid}_conversations`;
+    }
+    return 'vibranium_guest_conversations';
+  };
+
   // Sync / Subscribe to Conversations list
   const loadConversations = () => {
     if (currentUser) {
@@ -192,7 +204,8 @@ export default function App() {
           });
           
           // Merge any local fallback conversations (with 'local_' prefix)
-          const local = localStorage.getItem('vibranium_guest_conversations');
+          const localKey = getConversationsKey();
+          const local = localKey ? localStorage.getItem(localKey) : null;
           if (local) {
             try {
               const localList = JSON.parse(local) as Conversation[];
@@ -206,8 +219,9 @@ export default function App() {
           }
         }, (err) => {
           console.error("Firestore conversations subscription error:", err);
-          // Fallback to local storage (Guest mode / Local fallbacks)
-          const local = localStorage.getItem('vibranium_guest_conversations');
+          // Fallback to user-specific local storage
+          const localKey = getConversationsKey();
+          const local = localKey ? localStorage.getItem(localKey) : null;
           if (local) {
             try {
               setConversations(JSON.parse(local));
@@ -219,7 +233,8 @@ export default function App() {
         return unsubscribe;
       } catch (err) {
         console.error("Firestore query creation failed:", err);
-        const local = localStorage.getItem('vibranium_guest_conversations');
+        const localKey = getConversationsKey();
+        const local = localKey ? localStorage.getItem(localKey) : null;
         if (local) {
           try {
             setConversations(JSON.parse(local));
@@ -328,12 +343,13 @@ export default function App() {
         console.error("Failed to delete chat from Firestore:", err);
       }
     } else {
-      const existing = localStorage.getItem('vibranium_guest_conversations');
+      const existingKey = getConversationsKey(id);
+      const existing = existingKey ? localStorage.getItem(existingKey) : null;
       if (existing) {
         try {
           const list = JSON.parse(existing) as Conversation[];
           const updatedList = list.filter(c => c.id !== id);
-          localStorage.setItem('vibranium_guest_conversations', JSON.stringify(updatedList));
+          localStorage.setItem(existingKey, JSON.stringify(updatedList));
         } catch (e) {}
       }
       localStorage.removeItem(`vibranium_msg_${id}`);
@@ -361,23 +377,25 @@ export default function App() {
       } catch (err) {
         console.error("Failed to pin chat in Firestore, falling back to local:", err);
         // Fallback: update locally
-        const existing = localStorage.getItem('vibranium_guest_conversations');
+        const existingKey = getConversationsKey(id);
+        const existing = existingKey ? localStorage.getItem(existingKey) : null;
         if (existing) {
           try {
             const list = JSON.parse(existing) as Conversation[];
             const updatedList = list.map(c => c.id === id ? { ...c, isPinned: nextPinned } : c);
-            localStorage.setItem('vibranium_guest_conversations', JSON.stringify(updatedList));
+            localStorage.setItem(existingKey, JSON.stringify(updatedList));
             loadConversations();
           } catch (e) {}
         }
       }
     } else {
-      const existing = localStorage.getItem('vibranium_guest_conversations');
+      const existingKey = getConversationsKey(id);
+      const existing = existingKey ? localStorage.getItem(existingKey) : null;
       if (existing) {
         try {
           const list = JSON.parse(existing) as Conversation[];
           const updatedList = list.map(c => c.id === id ? { ...c, isPinned: nextPinned } : c);
-          localStorage.setItem('vibranium_guest_conversations', JSON.stringify(updatedList));
+          localStorage.setItem(existingKey, JSON.stringify(updatedList));
           loadConversations();
         } catch (e) {}
       }
@@ -406,23 +424,25 @@ export default function App() {
       } catch (err) {
         console.error("Failed to rename chat in Firestore, falling back to local:", err);
         // Fallback: update locally
-        const existing = localStorage.getItem('vibranium_guest_conversations');
+        const existingKey = getConversationsKey(id);
+        const existing = existingKey ? localStorage.getItem(existingKey) : null;
         if (existing) {
           try {
             const list = JSON.parse(existing) as Conversation[];
             const updatedList = list.map(c => c.id === id ? { ...c, title: newTitle, updatedAt: Date.now() } : c);
-            localStorage.setItem('vibranium_guest_conversations', JSON.stringify(updatedList));
+            localStorage.setItem(existingKey, JSON.stringify(updatedList));
             loadConversations();
           } catch (e) {}
         }
       }
     } else {
-      const existing = localStorage.getItem('vibranium_guest_conversations');
+      const existingKey = getConversationsKey(id);
+      const existing = existingKey ? localStorage.getItem(existingKey) : null;
       if (existing) {
         try {
           const list = JSON.parse(existing) as Conversation[];
           const updatedList = list.map(c => c.id === id ? { ...c, title: newTitle, updatedAt: Date.now() } : c);
-          localStorage.setItem('vibranium_guest_conversations', JSON.stringify(updatedList));
+          localStorage.setItem(existingKey, JSON.stringify(updatedList));
           loadConversations();
         } catch (e) {}
       }

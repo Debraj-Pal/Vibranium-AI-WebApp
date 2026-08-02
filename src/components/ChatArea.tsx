@@ -507,6 +507,16 @@ export default function ChatArea({
   const recognitionRef = useRef<any>(null);
   const initialInputRef = useRef<string>('');
 
+  const getConversationsKey = (id?: string) => {
+    if (currentUser) {
+      if (id && !id.startsWith('local_')) {
+        return null;
+      }
+      return `vibranium_user_${currentUser.uid}_conversations`;
+    }
+    return 'vibranium_guest_conversations';
+  };
+
   // Helper to extract numeric timestamp in ms for sorting
   const getMessageTime = (m: Message): number => {
     if (!m || !m.timestamp) return 0;
@@ -863,22 +873,24 @@ export default function ChatArea({
               });
             } catch (err) {
               console.warn("Failed to update AI title in Firestore, falling back to local:", err);
-              const existing = localStorage.getItem('vibranium_guest_conversations');
+              const existingKey = getConversationsKey(convId);
+              const existing = existingKey ? localStorage.getItem(existingKey) : null;
               if (existing) {
                 try {
                   const list = JSON.parse(existing) as Conversation[];
                   const updated = list.map(c => c.id === convId ? { ...c, title: aiTitle } : c);
-                  localStorage.setItem('vibranium_guest_conversations', JSON.stringify(updated));
+                  localStorage.setItem(existingKey, JSON.stringify(updated));
                 } catch (e) {}
               }
             }
           } else {
-            const existing = localStorage.getItem('vibranium_guest_conversations');
+            const existingKey = getConversationsKey(convId);
+            const existing = existingKey ? localStorage.getItem(existingKey) : null;
             if (existing) {
               try {
                 const list = JSON.parse(existing) as Conversation[];
                 const updated = list.map(c => c.id === convId ? { ...c, title: aiTitle } : c);
-                localStorage.setItem('vibranium_guest_conversations', JSON.stringify(updated));
+                localStorage.setItem(existingKey, JSON.stringify(updated));
               } catch (e) {}
             }
           }
@@ -913,15 +925,18 @@ export default function ChatArea({
         const newConv: Conversation = {
           id: convId,
           title: smartTitle,
-          userId: 'guest',
+          userId: currentUser.uid,
           lastMessageSnippet: initialSnippet,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString()
         };
-        const existing = localStorage.getItem('vibranium_guest_conversations');
+        const existingKey = getConversationsKey(convId);
+        const existing = existingKey ? localStorage.getItem(existingKey) : null;
         const list = existing ? JSON.parse(existing) : [];
         list.unshift(newConv);
-        localStorage.setItem('vibranium_guest_conversations', JSON.stringify(list));
+        if (existingKey) {
+          localStorage.setItem(existingKey, JSON.stringify(list));
+        }
         convId = newConv.id;
       }
     } else {
@@ -934,10 +949,13 @@ export default function ChatArea({
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       };
-      const existing = localStorage.getItem('vibranium_guest_conversations');
+      const existingKey = getConversationsKey(convId);
+      const existing = existingKey ? localStorage.getItem(existingKey) : null;
       const list = existing ? JSON.parse(existing) : [];
       list.unshift(newConv);
-      localStorage.setItem('vibranium_guest_conversations', JSON.stringify(list));
+      if (existingKey) {
+        localStorage.setItem(existingKey, JSON.stringify(list));
+      }
       convId = newConv.id;
     }
 
@@ -1029,12 +1047,15 @@ export default function ChatArea({
         list.sort((a: Message, b: Message) => getMessageTime(a) - getMessageTime(b));
 
         // Update guest conversation snippet
-        const existingConvs = localStorage.getItem('vibranium_guest_conversations');
+        const existingKey = getConversationsKey(convId);
+        const existingConvs = existingKey ? localStorage.getItem(existingKey) : null;
         if (existingConvs) {
           try {
             const convList = JSON.parse(existingConvs) as Conversation[];
             const updated = convList.map(c => c.id === convId ? { ...c, lastMessageSnippet: snippetText, updatedAt: new Date().toISOString() } : c);
-            localStorage.setItem('vibranium_guest_conversations', JSON.stringify(updated));
+            if (existingKey) {
+              localStorage.setItem(existingKey, JSON.stringify(updated));
+            }
           } catch (e) {
             // ignore
           }
@@ -1055,12 +1076,15 @@ export default function ChatArea({
       list.sort((a: Message, b: Message) => getMessageTime(a) - getMessageTime(b));
 
       // Update guest conversation snippet
-      const existingConvs = localStorage.getItem('vibranium_guest_conversations');
+      const existingKey = getConversationsKey(convId);
+      const existingConvs = existingKey ? localStorage.getItem(existingKey) : null;
       if (existingConvs) {
         try {
           const convList = JSON.parse(existingConvs) as Conversation[];
           const updated = convList.map(c => c.id === convId ? { ...c, lastMessageSnippet: snippetText, updatedAt: new Date().toISOString() } : c);
-          localStorage.setItem('vibranium_guest_conversations', JSON.stringify(updated));
+          if (existingKey) {
+            localStorage.setItem(existingKey, JSON.stringify(updated));
+          }
         } catch (e) {
           // ignore
         }
