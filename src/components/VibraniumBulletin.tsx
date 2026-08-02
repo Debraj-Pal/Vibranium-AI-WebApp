@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { getApiUrl } from '../lib/api';
 import {
   Globe,
   Search,
@@ -134,7 +135,7 @@ export default function VibraniumBulletin() {
         url += `&refresh=true`;
       }
 
-      const res = await fetch(url);
+      const res = await fetch(getApiUrl(url));
       if (res.ok) {
         const json = await res.json();
         setData(json);

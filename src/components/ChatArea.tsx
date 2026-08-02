@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback, useLayoutEffect } from 'react';
 import Markdown from 'react-markdown';
+import { getApiUrl } from '../lib/api';
 import { db } from '../lib/firebase';
 import { collection, addDoc, serverTimestamp, query, orderBy, onSnapshot, getDocs, doc, updateDoc, getDoc } from 'firebase/firestore';
 import { 
@@ -843,7 +844,7 @@ export default function ChatArea({
   // AI-powered title generator (ChatGPT style)
   const generateAiTitleAsync = async (convId: string, userPrompt: string) => {
     try {
-      const res = await fetch('/api/chat', {
+      const res = await fetch(getApiUrl('/api/chat'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -1206,7 +1207,7 @@ export default function ChatArea({
       let fetchErrorMsg = '';
 
       try {
-        response = await fetch('/api/chat', {
+        response = await fetch(getApiUrl('/api/chat'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           signal: controller.signal,
@@ -1367,7 +1368,7 @@ ${generateSmartOfflineFallback(textToSend)}`;
   // In-line translation for chat bubble
   const handleTranslateBubble = async (messageId: string, content: string) => {
     try {
-      const response = await fetch('/api/translate', {
+      const response = await fetch(getApiUrl('/api/translate'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

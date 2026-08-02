@@ -3,13 +3,14 @@ import {createRoot} from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
 import { initFirebaseWithConfig } from './lib/firebase';
+import { getApiUrl } from './lib/api';
 
 async function bootstrap() {
   try {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 1500);
 
-    const res = await fetch('/api/firebase-config', { signal: controller.signal });
+    const res = await fetch(getApiUrl('/api/firebase-config'), { signal: controller.signal });
     clearTimeout(timeoutId);
 
     if (res.ok) {

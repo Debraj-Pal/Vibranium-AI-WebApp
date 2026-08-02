@@ -34,7 +34,9 @@ export default function App() {
   const [activeModule, setActiveModule] = useState<string>('chat');
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [isSubscriptionModalOpen, setIsSubscriptionModalOpen] = useState(false);
-  const [userPlan, setUserPlan] = useState<'free' | 'pro' | 'max'>('free');
+  const [userPlan, setUserPlan] = useState<'free' | 'pro' | 'max'>(() => {
+    return (localStorage.getItem('vibranium_user_plan') as 'free' | 'pro' | 'max') || 'free';
+  });
   const [chatToDelete, setChatToDelete] = useState<{ id: string; title: string } | null>(null);
   const [chatToShare, setChatToShare] = useState<{ id: string; title: string } | null>(null);
   const [shareCopied, setShareCopied] = useState(false);
@@ -43,6 +45,7 @@ export default function App() {
 
   const handleUpgradePlan = async (plan: 'free' | 'pro' | 'max') => {
     setUserPlan(plan);
+    localStorage.setItem('vibranium_user_plan', plan);
     if (currentUser) {
       try {
         await setDoc(doc(db, 'users', currentUser.uid), {
@@ -104,8 +107,9 @@ export default function App() {
           setUserPlan('free');
         });
       } else {
-        // Logged out / guest user: always reset to free and clear current active chat and conversations list
-        setUserPlan('free');
+        // Logged out / guest user: restore local guest plan from localStorage, clear current active chat and list
+        const savedLocalPlan = localStorage.getItem('vibranium_user_plan');
+        setUserPlan((savedLocalPlan as 'free' | 'pro' | 'max') || 'free');
         setCurrentChatId(null);
         setConversations([]);
       }

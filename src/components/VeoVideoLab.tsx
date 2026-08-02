@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { getApiUrl } from '../lib/api';
 import { db } from '../lib/firebase';
 import { collection, addDoc, query, getDocs, orderBy, doc, deleteDoc } from 'firebase/firestore';
 import { 
@@ -153,7 +154,7 @@ export default function VeoVideoLab({ currentUser }: VeoVideoLabProps) {
 
     const interval = setInterval(async () => {
       try {
-        const res = await fetch('/api/video-status', {
+        const res = await fetch(getApiUrl('/api/video-status'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ operationName })
@@ -167,7 +168,7 @@ export default function VeoVideoLab({ currentUser }: VeoVideoLabProps) {
 
           const isSuccess = data.response?.generatedVideos?.length > 0;
           const status = isSuccess ? 'done' : 'failed';
-          const videoUrl = isSuccess ? `/api/video-download?operationName=${encodeURIComponent(operationName)}` : undefined;
+          const videoUrl = isSuccess ? getApiUrl(`/api/video-download?operationName=${encodeURIComponent(operationName)}`) : undefined;
 
           // Update job
           setJobs(prevJobs => {
@@ -228,7 +229,7 @@ export default function VeoVideoLab({ currentUser }: VeoVideoLabProps) {
         imageBase64 = referenceImage.split(',')[1];
       }
 
-      const res = await fetch('/api/generate-video', {
+      const res = await fetch(getApiUrl('/api/generate-video'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
