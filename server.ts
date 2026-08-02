@@ -24,14 +24,17 @@ app.get("/api/firebase-config", (req, res) => {
     console.error("Error reading firebase-applet-config.json:", err);
   }
 
+  const projectId = process.env.VITE_FIREBASE_PROJECT_ID || process.env.FIREBASE_PROJECT_ID || fileConfig.projectId || "stone-ivy-zttsj";
+  const isDefaultProj = projectId === "stone-ivy-zttsj";
+
   const config = {
     apiKey: process.env.VITE_FIREBASE_API_KEY || process.env.FIREBASE_API_KEY || fileConfig.apiKey || "AIzaSyBL-flLKwmXVw6lpk0USUl3Ih557MOyv3w",
     authDomain: process.env.VITE_FIREBASE_AUTH_DOMAIN || process.env.FIREBASE_AUTH_DOMAIN || fileConfig.authDomain || "stone-ivy-zttsj.firebaseapp.com",
-    projectId: process.env.VITE_FIREBASE_PROJECT_ID || process.env.FIREBASE_PROJECT_ID || fileConfig.projectId || "stone-ivy-zttsj",
+    projectId: projectId,
     storageBucket: process.env.VITE_FIREBASE_STORAGE_BUCKET || process.env.FIREBASE_STORAGE_BUCKET || fileConfig.storageBucket || "stone-ivy-zttsj.firebasestorage.app",
     messagingSenderId: process.env.VITE_FIREBASE_MESSAGING_SENDER_ID || process.env.FIREBASE_MESSAGING_SENDER_ID || fileConfig.messagingSenderId || "349153338672",
     appId: process.env.VITE_FIREBASE_APP_ID || process.env.FIREBASE_APP_ID || fileConfig.appId || "1:349153338672:web:5c11a623bdb836e27c94f5",
-    databaseId: process.env.VITE_FIREBASE_DATABASE_ID || process.env.FIREBASE_DATABASE_ID || fileConfig.firestoreDatabaseId || "ai-studio-e02cd6e0-fb0b-404c-a861-2b79907bb840"
+    databaseId: process.env.VITE_FIREBASE_DATABASE_ID || process.env.FIREBASE_DATABASE_ID || fileConfig.firestoreDatabaseId || (isDefaultProj ? "ai-studio-e02cd6e0-fb0b-404c-a861-2b79907bb840" : "")
   };
 
   res.json(config);
