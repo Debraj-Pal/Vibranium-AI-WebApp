@@ -107,7 +107,7 @@ export default function SettingsPanel({
                   Image Generation Engine
                 </div>
                 <p className="text-[11px] text-zinc-400 leading-normal">
-                  Powered by <span className="text-amber-300 font-semibold">Google Gemini Nano Banana (Imagen 3)</span> for 1080p, 1K, 2K, and 4K photorealistic art generation.
+                  Powered by <span className="text-amber-300 font-semibold">Google Gemini Nano Banana (Imagen 3)</span> with a premium, high-quality fallback to <span className="text-emerald-400 font-semibold">ByteDance Seedream 4.5</span> for photorealistic, robust art generation.
                 </p>
               </div>
 

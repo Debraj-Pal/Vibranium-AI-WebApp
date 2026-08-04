@@ -343,6 +343,21 @@ export default function VeoVideoLab({ currentUser }: VeoVideoLabProps) {
                 Creative Studio
               </h2>
 
+              {/* Google Veo Billing Tier Help Alert */}
+              <div className="p-3.5 rounded-lg bg-indigo-950/20 border border-indigo-500/20 space-y-2 text-xs">
+                <div className="flex items-center gap-2 text-indigo-400 font-bold">
+                  <AlertCircle className="h-4 w-4 shrink-0" />
+                  <span>Important Billing & Quota Note</span>
+                </div>
+                <p className="text-zinc-300 leading-relaxed text-[11px]">
+                  Google's high-compute <strong>Veo 3.1 Video models</strong> (like <code>veo-3.1-fast-generate-preview</code>) are <strong>not available on the standard Gemini Free API Tier</strong>. 
+                </p>
+                <p className="text-zinc-400 leading-relaxed text-[10px]">
+                  • <strong>With Free Key:</strong> The Google API rejects the generation or returns an empty sequence, and our system serves high-quality curated stock fallback video reels instead.<br/>
+                  • <strong>With Paid Credits (Pay-as-you-go):</strong> Once you connect a billing account with credits to your Google AI Studio API project, actual custom video clips are fully generated and fully playable!
+                </p>
+              </div>
+
               {/* Text Prompt */}
               <div className="space-y-1.5">
                 <label className="text-xs font-semibold text-zinc-400">Video Prompt</label>
