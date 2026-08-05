@@ -1,0 +1,38 @@
+{
+	"appId": "com.vibranium.ai",
+	"appName": "Vibranium AI",
+	"webDir": "dist",
+	"server": {
+		"androidScheme": "https",
+		"iosScheme": "https",
+		"cleartext": true
+	},
+	"android": {
+		"allowMixedContent": true,
+		"captureInput": true,
+		"backgroundColor": "#0a0a0a"
+	},
+	"ios": {
+		"backgroundColor": "#0a0a0a",
+		"contentInset": "always",
+		"allowsLinkPreview": false
+	},
+	"plugins": {
+		"SplashScreen": {
+			"launchShowDuration": 2000,
+			"backgroundColor": "#0a0a0a",
+			"showSpinner": false,
+			"androidSpinnerStyle": "small",
+			"spinnerColor": "#6366f1"
+		},
+		"StatusBar": {
+			"style": "DARK",
+			"backgroundColor": "#0a0a0a"
+		},
+		"Keyboard": {
+			"resize": "body",
+			"style": "DARK",
+			"resizeOnFullScreen": true
+		}
+	}
+}

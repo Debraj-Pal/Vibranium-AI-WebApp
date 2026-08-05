@@ -54,6 +54,9 @@ jobs:
             echo "Android platform directory missing, adding Capacitor Android..."
             npx cap add android
           fi
+          if [ -f "android/gradlew" ]; then
+            chmod +x android/gradlew
+          fi
           echo "Syncing Capacitor plugins and web assets..."
           npx cap sync android
 
