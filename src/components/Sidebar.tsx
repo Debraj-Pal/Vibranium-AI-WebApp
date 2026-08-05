@@ -101,13 +101,22 @@ export default function Sidebar({
   });
 
   return (
-    <div 
-      className={`fixed md:relative left-0 top-0 bottom-0 z-50 h-full flex flex-col border-r border-zinc-800 bg-[#111111] text-zinc-300 transition-all duration-300 ${
-        isOpen 
-          ? 'w-64 translate-x-0 shadow-2xl md:shadow-none' 
-          : 'w-64 md:w-16 -translate-x-full md:translate-x-0'
-      }`}
-    >
+    <>
+      {/* Mobile Backdrop Overlay when Sidebar is open */}
+      {isOpen && (
+        <div 
+          className="fixed inset-0 bg-black/60 backdrop-blur-xs z-40 md:hidden animate-fadeIn"
+          onClick={() => setIsOpen(false)}
+        />
+      )}
+
+      <div 
+        className={`fixed md:relative left-0 top-0 bottom-0 z-50 h-full flex flex-col border-r border-zinc-800 bg-[#111111] text-zinc-300 transition-all duration-300 safe-pt safe-pb ${
+          isOpen 
+            ? 'w-72 md:w-64 translate-x-0 shadow-2xl md:shadow-none' 
+            : 'w-72 md:w-16 -translate-x-full md:translate-x-0'
+        }`}
+      >
       {/* Top Brand Block */}
       <div className="flex h-16 items-center px-4">
         {!isOpen ? (
@@ -156,8 +165,9 @@ export default function Sidebar({
           onClick={() => {
             setActiveModule('chat');
             onNewChat();
+            if (window.innerWidth < 768) setIsOpen(false);
           }}
-          className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-all hover:bg-zinc-800/50 text-zinc-300 hover:text-white ${
+          className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all hover:bg-zinc-800/50 text-zinc-300 hover:text-white touch-target ${
             !isOpen && 'justify-center'
           }`}
           title="New chat"
@@ -170,8 +180,9 @@ export default function Sidebar({
           id="sidebar-search-chats-btn"
           onClick={() => {
             setActiveModule('search');
+            if (window.innerWidth < 768) setIsOpen(false);
           }}
-          className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-all ${
+          className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all touch-target ${
             activeModule === 'search'
               ? 'bg-zinc-800 text-white border-l-2 border-indigo-500'
               : 'hover:bg-zinc-800/50 text-zinc-400 hover:text-white'
@@ -442,5 +453,6 @@ export default function Sidebar({
         );
       })()}
     </div>
+    </>
   );
 }

@@ -26,6 +26,15 @@ async function bootstrap() {
       <App />
     </StrictMode>,
   );
+
+  // Register PWA Service Worker for offline support & caching
+  if ('serviceWorker' in navigator && process.env.NODE_ENV === 'production') {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js').catch((err) => {
+        console.warn('[PWA] ServiceWorker registration failed:', err);
+      });
+    });
+  }
 }
 
 bootstrap();

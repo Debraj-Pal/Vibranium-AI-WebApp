@@ -1599,15 +1599,15 @@ ${generateSmartOfflineFallback(textToSend)}`;
     <div className="flex-1 flex flex-col bg-[#0d0d0d] text-gray-200 overflow-hidden relative">
       
       {/* Header / Context Bar */}
-      <header className="h-14 border-b border-zinc-800 flex items-center justify-between px-4 md:px-6 bg-[#0a0a0a] shrink-0 z-20">
-        <div className="flex items-center gap-3">
+      <header className="h-14 border-b border-zinc-800 flex items-center justify-between px-3 md:px-6 bg-[#0a0a0a] shrink-0 z-20 safe-pt">
+        <div className="flex items-center gap-2 md:gap-3">
           {/* Hamburger Menu for Mobile/Tablet */}
           {!isSidebarOpen && setIsSidebarOpen && (
             <button
               id="mobile-chat-sidebar-toggle"
               type="button"
               onClick={() => setIsSidebarOpen(true)}
-              className="md:hidden p-1.5 rounded-lg hover:bg-zinc-850 text-zinc-400 hover:text-white transition-colors cursor-pointer"
+              className="md:hidden p-2 rounded-xl hover:bg-zinc-850 text-zinc-400 hover:text-white transition-colors cursor-pointer touch-target flex items-center justify-center"
               title="Open Sidebar"
             >
               <Menu className="h-5 w-5" />
@@ -1615,7 +1615,7 @@ ${generateSmartOfflineFallback(textToSend)}`;
           )}
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></div>
-            <span className="text-xs font-mono text-zinc-400 uppercase tracking-widest font-bold">Vibranium AI Core</span>
+            <span className="text-xs font-mono text-zinc-400 uppercase tracking-widest font-bold truncate max-w-[120px] sm:max-w-none">Vibranium AI Core</span>
           </div>
         </div>
 
@@ -1939,7 +1939,7 @@ ${generateSmartOfflineFallback(textToSend)}`;
       )}
 
       {/* Floating Action / Text Bar Area */}
-      <div className="p-4 md:p-6 bg-[#0d0d0d] z-10 shrink-0">
+      <div className="p-3 md:p-6 bg-[#0d0d0d] z-10 shrink-0 safe-pb">
         
         {/* Hidden file input for Upload files */}
         <input 

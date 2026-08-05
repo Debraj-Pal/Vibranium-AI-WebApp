@@ -1,31 +1,37 @@
 import React, { useState, useEffect } from 'react';
-import { auth, db } from './lib/firebase';
+import { auth, db } from './firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { collection, query, orderBy, onSnapshot, doc, deleteDoc, addDoc, serverTimestamp, setDoc, updateDoc, getDoc, getDocs } from 'firebase/firestore';
-import { UserSettings, Conversation, stripMarkdown, Message } from './types';
+import { UserSettings, Conversation, Message } from './types';
+import { stripMarkdown } from './utils';
+import { DEFAULT_USER_SETTINGS } from './config';
+import { 
+  NativePlatform,
+  SplashScreenService,
+  StatusBarService,
+  BackButtonService,
+  DeepLinkService,
+  AppLifecycleService
+} from './native';
 import { Menu, Share2, Copy, Check } from 'lucide-react';
 import { Analytics } from '@vercel/analytics/react';
 
-// Import components
+// Import modular pages and components
 import Sidebar from './components/Sidebar';
-import ChatArea from './components/ChatArea';
-import SearchChatsView from './components/SearchChatsView';
-import TranslationModule from './components/TranslationModule';
-import ExtraTools from './components/ExtraTools';
-import SettingsPanel from './components/SettingsPanel';
 import AuthModal from './components/AuthModal';
 import SubscriptionModal from './components/SubscriptionModal';
-import VeoVideoLab from './components/VeoVideoLab';
+import InstallPrompt from './components/InstallPrompt';
+import OfflineStatusBanner from './components/OfflineStatusBanner';
+import {
+  ChatPage,
+  SearchPage,
+  TranslatorPage,
+  ExtraToolsPage,
+  VideoLabPage,
+  SettingsPage
+} from './pages';
 
-const DEFAULT_SETTINGS: UserSettings = {
-  userId: 'guest',
-  theme: 'dark',
-  accessibility: {
-    fontSize: 'md',
-    screenReader: false,
-    speechRate: 1.0,
-  },
-};
+const DEFAULT_SETTINGS: UserSettings = DEFAULT_USER_SETTINGS;
 
 export default function App() {
   const [currentUser, setCurrentUser] = useState<any>(null);
@@ -564,16 +570,67 @@ export default function App() {
     setTimeout(() => setShareCopied(false), 2500);
   };
 
-  // Sync Theme attribute on document element
+  // Hide native Splash Screen once initial auth loading completes
   useEffect(() => {
-    if (settings.theme === 'light') {
+    if (!authLoading) {
+      SplashScreenService.hide(300);
+    }
+  }, [authLoading]);
+
+  // Sync Theme attribute & Native Status / Navigation Bar styling
+  useEffect(() => {
+    const isLight = settings.theme === 'light';
+    if (isLight) {
       document.documentElement.classList.add('light-theme');
       document.documentElement.classList.remove('dark');
+      StatusBarService.setStyle('LIGHT');
+      StatusBarService.setBackgroundColor('#ffffff');
+      StatusBarService.setNavigationBarColor('#ffffff', false);
     } else {
       document.documentElement.classList.remove('light-theme');
       document.documentElement.classList.add('dark');
+      const bgColor = settings.theme === 'amoled' ? '#000000' : '#0a0a0a';
+      StatusBarService.setStyle('DARK');
+      StatusBarService.setBackgroundColor(bgColor);
+      StatusBarService.setNavigationBarColor(bgColor, true);
     }
   }, [settings.theme]);
+
+  // Register Android Hardware Back Button, Deep Linking, and App Lifecycle Listeners
+  useEffect(() => {
+    AppLifecycleService.init();
+    DeepLinkService.init();
+
+    // Deep link callback
+    const unsubscribeDeepLink = DeepLinkService.addDeepLinkListener((linkData) => {
+      console.log('[App] Received Deep Link:', linkData);
+      if (linkData.params.share) {
+        setActiveModule('chat');
+        setCurrentChatId(linkData.params.share);
+      }
+    });
+
+    // Hardware Back Button callback
+    BackButtonService.registerHandler(() => ({
+      isModalOpen: Boolean(isAuthOpen || isSubscriptionModalOpen || chatToDelete || chatToShare || chatToRename),
+      isSidebarOpen,
+      activeModule,
+      closeModal: () => {
+        setIsAuthOpen(false);
+        setIsSubscriptionModalOpen(false);
+        setChatToDelete(null);
+        setChatToShare(null);
+        setChatToRename(null);
+      },
+      closeSidebar: () => setIsSidebarOpen(false),
+      navigateToModule: (mod) => setActiveModule(mod),
+    }));
+
+    return () => {
+      unsubscribeDeepLink();
+      BackButtonService.unregister();
+    };
+  }, [isAuthOpen, isSubscriptionModalOpen, chatToDelete, chatToShare, chatToRename, isSidebarOpen, activeModule]);
 
   // Map font size parameter to viewport class
   const getFontSizeClass = () => {
@@ -607,8 +664,9 @@ export default function App() {
   }
 
   return (
-    <div className={`flex h-screen w-screen overflow-hidden text-gray-200 ${getThemeBackground()} ${getFontSizeClass()}`}>
+    <div className={`flex h-screen h-dvh w-screen overflow-hidden text-gray-200 ${getThemeBackground()} ${getFontSizeClass()}`}>
       <Analytics />
+      <OfflineStatusBanner />
       
       {/* Mobile/Tablet Overlay Backdrop for Sidebar */}
       {isSidebarOpen && (
@@ -655,7 +713,7 @@ export default function App() {
         
         {/* Chat Assistant Area */}
         {activeModule === 'chat' && (
-          <ChatArea
+          <ChatPage
             settings={settings}
             currentUser={currentUser}
             currentChatId={currentChatId}
@@ -674,7 +732,7 @@ export default function App() {
 
         {/* Search Chats Module View */}
         {activeModule === 'search' && (
-          <SearchChatsView
+          <SearchPage
             conversations={conversations}
             onSelectChat={handleSelectChat}
             onDeleteChat={triggerDeleteConfirm}
@@ -688,14 +746,14 @@ export default function App() {
 
         {/* Language Translator Module */}
         {activeModule === 'translator' && (
-          <TranslationModule 
+          <TranslatorPage 
             speechRate={settings.accessibility.speechRate}
           />
         )}
 
         {/* Quick Tools Modules */}
         {(activeModule === 'camera' || activeModule === 'screenshot' || activeModule === 'alarms' || activeModule === 'news') && (
-          <ExtraTools
+          <ExtraToolsPage
             toolType={activeModule as any}
             currentUser={currentUser}
           />
@@ -703,14 +761,14 @@ export default function App() {
 
         {/* Veo Video Lab */}
         {activeModule === 'video' && (
-          <VeoVideoLab
+          <VideoLabPage
             currentUser={currentUser}
           />
         )}
 
         {/* System Settings & Engine Providers */}
         {activeModule === 'settings' && (
-          <SettingsPanel
+          <SettingsPage
             settings={settings}
             onUpdateSettings={handleUpdateSettings}
             currentUser={currentUser}
@@ -886,6 +944,9 @@ export default function App() {
           </div>
         </div>
       )}
+
+      {/* PWA Installation Banner */}
+      <InstallPrompt />
     </div>
   );
 }

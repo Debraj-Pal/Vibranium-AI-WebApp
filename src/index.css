@@ -45,6 +45,61 @@
 }
 
 /* ==========================================================================
+   MOBILE & PWA SAFE AREA & TOUCH OPTIMIZATIONS
+   ========================================================================== */
+:root {
+  --sat: env(safe-area-inset-top, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+  --sal: env(safe-area-inset-left, 0px);
+  --sar: env(safe-area-inset-right, 0px);
+}
+
+/* Safe area padding utilities */
+.safe-pt {
+  padding-top: max(12px, env(safe-area-inset-top));
+}
+.safe-pb {
+  padding-bottom: max(12px, env(safe-area-inset-bottom));
+}
+.safe-px {
+  padding-left: max(16px, env(safe-area-inset-left));
+  padding-right: max(16px, env(safe-area-inset-right));
+}
+
+/* Dynamic Viewport Height for Mobile Keyboards */
+.h-dvh {
+  height: 100vh;
+  height: 100dvh;
+}
+
+.min-h-dvh {
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+.max-h-dvh {
+  max-height: 100vh;
+  max-height: 100dvh;
+}
+
+/* Touch & Mobile UX Enhancements */
+button, a, input, textarea, select {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Smooth Scrolling & Mobile Overscroll prevention */
+html, body {
+  overscroll-behavior-y: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ==========================================================================
    LIGHT MODE Theme Overrides
    ========================================================================== */
 html.light-theme,

@@ -111,10 +111,10 @@ export default function AuthModal({ onClose, currentUser }: AuthModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md px-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 safe-pt safe-pb">
       <div 
         id="auth-container" 
-        className="relative w-full max-w-md overflow-hidden rounded-md border border-zinc-800 bg-[#111111] p-8 text-white shadow-2xl"
+        className="relative w-full max-w-md max-h-[90vh] overflow-y-auto rounded-2xl border border-zinc-800 bg-[#111111] p-6 md:p-8 text-white shadow-2xl"
       >
         {/* Subtle accent glow */}
         <div className="absolute -top-24 -left-24 h-48 w-48 rounded-full bg-indigo-600/10 blur-3xl pointer-events-none"></div>

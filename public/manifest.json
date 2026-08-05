@@ -1,0 +1,18 @@
+{
+  "name": "Vibranium AI",
+  "short_name": "Vibranium",
+  "description": "Next-Generation Multi-Model AI Assistant & Workspace",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0a0a",
+  "theme_color": "#0a0a0a",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
