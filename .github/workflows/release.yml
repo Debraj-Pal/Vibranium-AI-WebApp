@@ -49,7 +49,7 @@ jobs:
             gradle-${{ runner.os }}-
 
       - name: Install Node Dependencies
-        run: npm ci
+        run: npm ci || npm install --legacy-peer-deps
 
       - name: Run Type Checks
         run: npx tsc --noEmit

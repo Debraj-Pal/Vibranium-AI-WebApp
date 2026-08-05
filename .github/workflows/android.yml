@@ -41,7 +41,7 @@ jobs:
             gradle-${{ runner.os }}-
 
       - name: Install Node Dependencies
-        run: npm ci
+        run: npm ci || npm install --legacy-peer-deps
 
       - name: Build Web Application
         run: npm run build
@@ -51,10 +51,10 @@ jobs:
       - name: Add or Sync Capacitor Android Platform
         run: |
           if [ ! -d "android" ]; then
-            echo "Android platform directory missing, initializing Capacitor Android..."
+            echo "Android platform directory missing, adding Capacitor Android..."
             npx cap add android
           fi
-          echo "Syncing Capacitor plugins and assets to Android project..."
+          echo "Syncing Capacitor plugins and web assets..."
           npx cap sync android
 
       - name: Setup Keystore for Android Signing

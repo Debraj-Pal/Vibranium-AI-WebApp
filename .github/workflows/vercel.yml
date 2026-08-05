@@ -24,10 +24,23 @@ jobs:
           node-version: 20
           cache: 'npm'
 
+      - name: Check Vercel Token Availability
+        id: check_token
+        run: |
+          if [ -n "${{ secrets.VERCEL_TOKEN }}" ]; then
+            echo "HAS_TOKEN=true" >> $GITHUB_OUTPUT
+          else
+            echo "HAS_TOKEN=false" >> $GITHUB_OUTPUT
+            echo "⚠️ VERCEL_TOKEN secret is not configured. Vercel CLI step skipped."
+            echo "Note: If Vercel GitHub app is connected, Vercel will deploy automatically."
+          fi
+
       - name: Install Vercel CLI
+        if: steps.check_token.outputs.HAS_TOKEN == 'true'
         run: npm install -g vercel@latest
 
       - name: Pull Vercel Environment Information
+        if: steps.check_token.outputs.HAS_TOKEN == 'true'
         run: |
           if [ "${{ github.ref_name }}" = "main" ]; then
             vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
@@ -39,6 +52,7 @@ jobs:
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
 
       - name: Build Project Artifacts via Vercel
+        if: steps.check_token.outputs.HAS_TOKEN == 'true'
         run: |
           if [ "${{ github.ref_name }}" = "main" ]; then
             vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
@@ -50,6 +64,7 @@ jobs:
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
 
       - name: Deploy to Vercel
+        if: steps.check_token.outputs.HAS_TOKEN == 'true'
         id: deploy
         run: |
           if [ "${{ github.ref_name }}" = "main" ]; then
@@ -66,7 +81,12 @@ jobs:
         if: always()
         run: |
           echo "### 🚀 Vercel Deployment Summary" >> $GITHUB_STEP_SUMMARY
-          echo "- **Status**: ${{ job.status == 'success' && '✅ Deployed' || '❌ Failed' }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Environment**: \`${{ github.ref_name == 'main' && 'Production' || 'Preview' }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "- **Branch**: \`${{ github.ref_name }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "- **Deployment URL**: [${{ steps.deploy.outputs.DEPLOY_URL }}](${{ steps.deploy.outputs.DEPLOY_URL }})" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ steps.check_token.outputs.HAS_TOKEN }}" = "true" ]; then
+            echo "- **Status**: ${{ job.status == 'success' && '✅ Deployed' || '❌ Failed' }}" >> $GITHUB_STEP_SUMMARY
+            echo "- **Environment**: \`${{ github.ref_name == 'main' && 'Production' || 'Preview' }}\`" >> $GITHUB_STEP_SUMMARY
+            echo "- **Branch**: \`${{ github.ref_name }}\`" >> $GITHUB_STEP_SUMMARY
+            echo "- **Deployment URL**: [${{ steps.deploy.outputs.DEPLOY_URL }}](${{ steps.deploy.outputs.DEPLOY_URL }})" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- **Status**: ℹ️ Skipped (Missing \`VERCEL_TOKEN\` Secret)" >> $GITHUB_STEP_SUMMARY
+            echo "- **Notice**: Add \`VERCEL_TOKEN\`, \`VERCEL_ORG_ID\`, and \`VERCEL_PROJECT_ID\` to GitHub Secrets for direct CLI deployment." >> $GITHUB_STEP_SUMMARY
+          fi
