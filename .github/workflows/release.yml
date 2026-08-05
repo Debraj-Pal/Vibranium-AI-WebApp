@@ -1,4 +1,4 @@
-name: Release & Tag Automation
+name: 'Release and Tag Automation'
 
 on:
   push:
@@ -17,7 +17,7 @@ concurrency:
 
 jobs:
   create-release:
-    name: Build & Publish Release
+    name: 'Build and Publish Release'
     runs-on: ubuntu-latest
 
     steps:
@@ -98,7 +98,7 @@ EOF
             echo "HAS_KEYSTORE=false" >> $GITHUB_OUTPUT
           fi
 
-      - name: Build Release APK & AAB
+      - name: 'Build Release APK and AAB'
         run: |
           cd android
           mkdir -p gradle/wrapper

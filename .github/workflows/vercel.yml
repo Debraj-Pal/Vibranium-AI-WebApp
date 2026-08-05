@@ -1,4 +1,4 @@
-name: Vercel Web Deployment
+name: 'Vercel Web Deployment'
 
 on:
   push:

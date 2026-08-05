@@ -1,4 +1,4 @@
-name: Continuous Integration & Quality Checks
+name: 'Continuous Integration and Quality Checks'
 
 on:
   push:
@@ -13,7 +13,7 @@ concurrency:
 
 jobs:
   quality-check:
-    name: Code Quality & Type Check
+    name: 'Code Quality and Type Check'
     runs-on: ubuntu-latest
 
     steps:
@@ -28,16 +28,16 @@ jobs:
           node-version: 22
           cache: 'npm'
 
-      - name: Restore & Validate Dependencies
+      - name: 'Restore and Validate Dependencies'
         run: |
           echo "Installing npm dependencies..."
           npm ci || npm install --legacy-peer-deps
 
-      - name: Security & Audit Check
+      - name: 'Security and Audit Check'
         run: |
           npm audit --audit-level=high || true
 
-      - name: TypeScript Compilation & Type Check
+      - name: 'TypeScript Compilation and Type Check'
         run: |
           echo "Running TypeScript compiler check..."
           npx tsc --noEmit
@@ -47,7 +47,7 @@ jobs:
           echo "Testing web production build compilation..."
           npm run build
 
-      - name: Check Unused Dependencies & Build Integrity
+      - name: 'Check Unused Dependencies and Build Integrity'
         run: |
           echo "Verifying build artifact integrity..."
           test -d dist || (echo "Error: dist directory was not created!" && exit 1)

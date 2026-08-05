@@ -1,7 +1,9 @@
-name: Capacitor Android Build
+name: 'Capacitor Android Build'
 
 on:
   push:
+    branches: [ main, develop, 'feature/*' ]
+  pull_request:
     branches: [ main, develop ]
   workflow_dispatch:
 
@@ -11,7 +13,7 @@ concurrency:
 
 jobs:
   build-android:
-    name: Sync Capacitor & Build Android Apps
+    name: 'Sync Capacitor and Build Android Apps'
     runs-on: ubuntu-latest
 
     steps:
@@ -48,7 +50,7 @@ jobs:
         env:
           NODE_ENV: production
 
-      - name: Add or Sync Capacitor Android Platform
+      - name: 'Add or Sync Capacitor Android Platform'
         run: |
           if [ ! -d "android" ]; then
             echo "Android platform directory missing, adding Capacitor Android..."
@@ -91,7 +93,7 @@ EOF
             echo "HAS_KEYSTORE=false" >> $GITHUB_OUTPUT
           fi
 
-      - name: Grant Execute Permission & Ensure Gradle Wrapper
+      - name: 'Grant Execute Permission and Ensure Gradle Wrapper'
         run: |
           mkdir -p android/gradle/wrapper
           if [ ! -f "android/gradle/wrapper/gradle-wrapper.properties" ] || [ ! -s "android/gradle/wrapper/gradle-wrapper.properties" ]; then
