@@ -64,9 +64,14 @@ jobs:
           if [ ! -d "android" ]; then
             npx cap add android
           fi
+          mkdir -p android/gradle/wrapper
+          if [ ! -f "android/gradle/wrapper/gradle-wrapper.jar" ] || [ ! -s "android/gradle/wrapper/gradle-wrapper.jar" ]; then
+            echo "gradle-wrapper.jar missing or empty. Fetching Gradle Wrapper JAR..."
+            curl -sSL "https://raw.githubusercontent.com/gradle/gradle/master/gradle/wrapper/gradle-wrapper.jar" -o android/gradle/wrapper/gradle-wrapper.jar || true
+          fi
           if [ -f "android/gradlew" ]; then
-            sed -i 's/\r$//' android/gradlew
-            chmod +x android/gradlew
+            sed -i 's/\r$//' android/gradlew || true
+            chmod +x android/gradlew || true
           fi
           npx cap sync android
 
@@ -84,8 +89,13 @@ jobs:
       - name: Build Release APK & AAB
         run: |
           cd android
-          sed -i 's/\r$//' gradlew
-          chmod +x gradlew
+          mkdir -p gradle/wrapper
+          if [ ! -f "gradle/wrapper/gradle-wrapper.jar" ] || [ ! -s "gradle/wrapper/gradle-wrapper.jar" ]; then
+            echo "gradle-wrapper.jar missing. Fetching JAR..."
+            curl -sSL "https://raw.githubusercontent.com/gradle/gradle/master/gradle/wrapper/gradle-wrapper.jar" -o gradle/wrapper/gradle-wrapper.jar || true
+          fi
+          sed -i 's/\r$//' gradlew || true
+          chmod +x gradlew || true
           if [ "${{ steps.setup_keystore.outputs.HAS_KEYSTORE }}" = "true" ]; then
             ./gradlew assembleRelease bundleRelease \
               -Pandroid.injected.signing.store.file=app/release.keystore \

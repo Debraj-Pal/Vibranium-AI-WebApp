@@ -54,6 +54,11 @@ jobs:
             echo "Android platform directory missing, adding Capacitor Android..."
             npx cap add android
           fi
+          mkdir -p android/gradle/wrapper
+          if [ ! -f "android/gradle/wrapper/gradle-wrapper.jar" ] || [ ! -s "android/gradle/wrapper/gradle-wrapper.jar" ]; then
+            echo "gradle-wrapper.jar missing or empty. Fetching Gradle Wrapper JAR..."
+            curl -sSL "https://raw.githubusercontent.com/gradle/gradle/master/gradle/wrapper/gradle-wrapper.jar" -o android/gradle/wrapper/gradle-wrapper.jar || true
+          fi
           if [ -f "android/gradlew" ]; then
             sed -i 's/\r$//' android/gradlew || true
             chmod +x android/gradlew || true
@@ -74,8 +79,13 @@ jobs:
             echo "HAS_KEYSTORE=false" >> $GITHUB_OUTPUT
           fi
 
-      - name: Grant Execute Permission for Gradle Wrapper
+      - name: Grant Execute Permission & Ensure Gradle Wrapper
         run: |
+          mkdir -p android/gradle/wrapper
+          if [ ! -f "android/gradle/wrapper/gradle-wrapper.jar" ] || [ ! -s "android/gradle/wrapper/gradle-wrapper.jar" ]; then
+            echo "gradle-wrapper.jar missing or empty. Fetching Gradle Wrapper JAR..."
+            curl -sSL "https://raw.githubusercontent.com/gradle/gradle/master/gradle/wrapper/gradle-wrapper.jar" -o android/gradle/wrapper/gradle-wrapper.jar || true
+          fi
           if [ -f "android/gradlew" ]; then
             sed -i 's/\r$//' android/gradlew || true
             chmod +x android/gradlew || true

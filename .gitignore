@@ -7,3 +7,4 @@ coverage/
 .env*
 !.env.example
 firebase-applet-config.json
+!android/gradle/wrapper/gradle-wrapper.jar
