@@ -1,0 +1,64 @@
+name: Web Production Build
+
+on:
+  push:
+    branches: [ main, develop ]
+  workflow_dispatch:
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-web:
+    name: Build Web Production Application
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Codebase
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js Runtime
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Run Production Web Build
+        run: npm run build
+        env:
+          NODE_ENV: production
+          VITE_GEMINI_API_KEY: ${{ secrets.VITE_GEMINI_API_KEY }}
+          VITE_API_SERVER_URL: ${{ secrets.VITE_API_SERVER_URL }}
+
+      - name: Verify Build Output Structure
+        run: |
+          if [ ! -d "dist" ]; then
+            echo "❌ Build failed: 'dist' folder missing."
+            exit 1
+          fi
+          if [ ! -f "dist/index.html" ]; then
+            echo "❌ Build failed: 'dist/index.html' missing."
+            exit 1
+          fi
+          echo "✅ Production web build verified successfully."
+
+      - name: Upload Web Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-production-build
+          path: dist/
+          retention-days: 14
+
+      - name: Generate Build Summary
+        if: always()
+        run: |
+          BUILD_SIZE=$(du -sh dist | cut -f1)
+          echo "### 📦 Web Production Build Summary" >> $GITHUB_STEP_SUMMARY
+          echo "- **Status**: ${{ job.status == 'success' && '✅ Succeeded' || '❌ Failed' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch**: \`${{ github.ref_name }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Bundle Size**: \`$BUILD_SIZE\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Artifact**: \`web-production-build\`" >> $GITHUB_STEP_SUMMARY
