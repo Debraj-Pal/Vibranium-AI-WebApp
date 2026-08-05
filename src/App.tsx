@@ -5,15 +5,19 @@ import { collection, query, orderBy, onSnapshot, doc, deleteDoc, addDoc, serverT
 import { UserSettings, Conversation, Message } from './types';
 import { stripMarkdown } from './utils';
 import { DEFAULT_USER_SETTINGS } from './config';
+import { getPublicOrigin } from './lib/api';
 import { 
   NativePlatform,
   SplashScreenService,
   StatusBarService,
   BackButtonService,
   DeepLinkService,
-  AppLifecycleService
+  AppLifecycleService,
+  ShareService,
+  ClipboardService
 } from './native';
 import { Menu, Share2, Copy, Check } from 'lucide-react';
+
 import { Analytics } from '@vercel/analytics/react';
 
 // Import modular pages and components
@@ -204,14 +208,28 @@ export default function App() {
     if (currentUser) {
       try {
         const q = query(
-          collection(db, 'users', currentUser.uid, 'conversations'),
-          orderBy('createdAt', 'desc')
+          collection(db, 'users', currentUser.uid, 'conversations')
         );
         const unsubscribe = onSnapshot(q, (snapshot) => {
           const list: Conversation[] = [];
           snapshot.forEach((docSnap) => {
             list.push({ id: docSnap.id, ...docSnap.data() } as Conversation);
           });
+          
+          // Sort conversations by updatedAt or createdAt descending cleanly
+          const getConvTime = (c: Conversation) => {
+            const t = c.updatedAt || c.createdAt;
+            if (t && typeof (t as any).toMillis === 'function') return (t as any).toMillis();
+            if (t && typeof (t as any).seconds === 'number') return (t as any).seconds * 1000;
+            if (typeof t === 'number') return t;
+            if (typeof t === 'string') {
+              const p = Date.parse(t);
+              if (!isNaN(p)) return p;
+            }
+            return 0;
+          };
+
+          list.sort((a, b) => getConvTime(b) - getConvTime(a));
           
           // Merge any local fallback conversations (with 'local_' prefix)
           const localKey = getConversationsKey();
@@ -346,6 +364,10 @@ export default function App() {
     if (currentChatId === id) {
       setCurrentChatId(null);
     }
+
+    // Optimistically update local React conversations state immediately
+    setConversations(prev => prev.filter(c => c.id !== id));
+
     if (currentUser && !id.startsWith('local_')) {
       try {
         await deleteDoc(doc(db, 'users', currentUser.uid, 'conversations', id));
@@ -363,8 +385,8 @@ export default function App() {
         } catch (e) {}
       }
       localStorage.removeItem(`vibranium_msg_${id}`);
-      loadConversations();
     }
+    setChatToDelete(null);
   };
 
   const triggerDeleteConfirm = (id: string) => {
@@ -379,6 +401,10 @@ export default function App() {
     const conv = conversations.find(c => c.id === id);
     if (!conv) return;
     const nextPinned = !conv.isPinned;
+
+    // Optimistically update local state
+    setConversations(prev => prev.map(c => c.id === id ? { ...c, isPinned: nextPinned } : c));
+
     if (currentUser && !id.startsWith('local_')) {
       try {
         await updateDoc(doc(db, 'users', currentUser.uid, 'conversations', id), {
@@ -386,17 +412,6 @@ export default function App() {
         });
       } catch (err) {
         console.error("Failed to pin chat in Firestore, falling back to local:", err);
-        // Fallback: update locally
-        const existingKey = getConversationsKey(id);
-        const existing = existingKey ? localStorage.getItem(existingKey) : null;
-        if (existing) {
-          try {
-            const list = JSON.parse(existing) as Conversation[];
-            const updatedList = list.map(c => c.id === id ? { ...c, isPinned: nextPinned } : c);
-            localStorage.setItem(existingKey, JSON.stringify(updatedList));
-            loadConversations();
-          } catch (e) {}
-        }
       }
     } else {
       const existingKey = getConversationsKey(id);
@@ -406,7 +421,6 @@ export default function App() {
           const list = JSON.parse(existing) as Conversation[];
           const updatedList = list.map(c => c.id === id ? { ...c, isPinned: nextPinned } : c);
           localStorage.setItem(existingKey, JSON.stringify(updatedList));
-          loadConversations();
         } catch (e) {}
       }
     }
@@ -425,6 +439,10 @@ export default function App() {
     if (!chatToRename || !renameInput.trim()) return;
     const id = chatToRename.id;
     const newTitle = renameInput.trim();
+
+    // Optimistically update local state immediately
+    setConversations(prev => prev.map(c => c.id === id ? { ...c, title: newTitle, updatedAt: Date.now() } : c));
+
     if (currentUser && !id.startsWith('local_')) {
       try {
         await updateDoc(doc(db, 'users', currentUser.uid, 'conversations', id), {
@@ -433,17 +451,6 @@ export default function App() {
         });
       } catch (err) {
         console.error("Failed to rename chat in Firestore, falling back to local:", err);
-        // Fallback: update locally
-        const existingKey = getConversationsKey(id);
-        const existing = existingKey ? localStorage.getItem(existingKey) : null;
-        if (existing) {
-          try {
-            const list = JSON.parse(existing) as Conversation[];
-            const updatedList = list.map(c => c.id === id ? { ...c, title: newTitle, updatedAt: Date.now() } : c);
-            localStorage.setItem(existingKey, JSON.stringify(updatedList));
-            loadConversations();
-          } catch (e) {}
-        }
       }
     } else {
       const existingKey = getConversationsKey(id);
@@ -453,7 +460,6 @@ export default function App() {
           const list = JSON.parse(existing) as Conversation[];
           const updatedList = list.map(c => c.id === id ? { ...c, title: newTitle, updatedAt: Date.now() } : c);
           localStorage.setItem(existingKey, JSON.stringify(updatedList));
-          loadConversations();
         } catch (e) {}
       }
     }
@@ -562,10 +568,25 @@ export default function App() {
     }
   };
 
-  const copyShareLink = () => {
+  const copyShareLink = async () => {
     if (!chatToShare) return;
-    const url = `${window.location.origin}/share/${chatToShare.id}`;
-    navigator.clipboard.writeText(url);
+    const publicOrigin = getPublicOrigin();
+    const url = `${publicOrigin}/share/${chatToShare.id}`;
+
+    if (NativePlatform.isNative()) {
+      try {
+        await ShareService.share({
+          title: chatToShare.title || 'Vibranium AI Conversation',
+          text: `Check out this conversation on Vibranium AI: "${chatToShare.title}"`,
+          url: url
+        });
+      } catch (e) {
+        await ClipboardService.writeText(url);
+      }
+    } else {
+      await ClipboardService.writeText(url);
+    }
+
     setShareCopied(true);
     setTimeout(() => setShareCopied(false), 2500);
   };
