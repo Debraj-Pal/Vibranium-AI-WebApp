@@ -19,7 +19,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup JDK 17
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
           java-version: '17'
@@ -55,8 +55,8 @@ jobs:
             npx cap add android
           fi
           if [ -f "android/gradlew" ]; then
-            sed -i 's/\r$//' android/gradlew
-            chmod +x android/gradlew
+            sed -i 's/\r$//' android/gradlew || true
+            chmod +x android/gradlew || true
           fi
           echo "Syncing Capacitor plugins and web assets..."
           npx cap sync android
@@ -77,18 +77,22 @@ jobs:
       - name: Grant Execute Permission for Gradle Wrapper
         run: |
           if [ -f "android/gradlew" ]; then
-            sed -i 's/\r$//' android/gradlew
-            chmod +x android/gradlew
+            sed -i 's/\r$//' android/gradlew || true
+            chmod +x android/gradlew || true
           fi
 
       - name: Build Debug APK
         run: |
           cd android
+          sed -i 's/\r$//' gradlew || true
+          chmod +x gradlew || true
           ./gradlew assembleDebug --stacktrace
 
       - name: Build Release APK
         run: |
           cd android
+          sed -i 's/\r$//' gradlew || true
+          chmod +x gradlew || true
           if [ "${{ steps.setup_keystore.outputs.HAS_KEYSTORE }}" = "true" ]; then
             ./gradlew assembleRelease \
               -Pandroid.injected.signing.store.file=app/release.keystore \
@@ -102,6 +106,8 @@ jobs:
       - name: Build Release App Bundle (AAB)
         run: |
           cd android
+          sed -i 's/\r$//' gradlew || true
+          chmod +x gradlew || true
           if [ "${{ steps.setup_keystore.outputs.HAS_KEYSTORE }}" = "true" ]; then
             ./gradlew bundleRelease \
               -Pandroid.injected.signing.store.file=app/release.keystore \
@@ -125,6 +131,7 @@ jobs:
         with:
           name: vibranium-android-apks
           path: build-output/apk/
+          if-no-files-found: ignore
           retention-days: 14
 
       - name: Upload Android AAB Artifact
@@ -132,6 +139,7 @@ jobs:
         with:
           name: vibranium-android-aab
           path: build-output/aab/
+          if-no-files-found: ignore
           retention-days: 14
 
       - name: Generate Android Build Summary

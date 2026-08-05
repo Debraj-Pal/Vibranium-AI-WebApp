@@ -35,7 +35,7 @@ jobs:
 
       - name: Security & Audit Check
         run: |
-          npm audit --audit-level=high || echo "Non-critical audit warnings encountered"
+          npm audit --audit-level=high || true
 
       - name: TypeScript Compilation & Type Check
         run: |
