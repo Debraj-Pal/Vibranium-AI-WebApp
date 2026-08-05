@@ -1437,16 +1437,7 @@ ${generateSmartOfflineFallback(textToSend)}`;
           title="Select AI Model"
         >
           <Cpu className="h-3.5 w-3.5 text-indigo-400 shrink-0" />
-          <span className="truncate max-w-[100px] sm:max-w-[130px]">{selectedModelObj.name}</span>
-          <span className={`text-[9px] px-1.5 py-0.2 rounded font-bold uppercase ${
-            selectedModelObj.isFree 
-              ? 'bg-zinc-700/80 text-zinc-300' 
-              : selectedModelObj.tag === 'Max'
-              ? 'bg-[#18191c] text-purple-300 border border-purple-800/40'
-              : 'bg-indigo-950 text-indigo-400 border border-indigo-800/50'
-          }`}>
-            {selectedModelObj.tag}
-          </span>
+          <span className="truncate max-w-[110px] sm:max-w-[150px]">{selectedModelObj.name}</span>
           <ChevronDown className="h-3 w-3 text-zinc-400 shrink-0" />
         </button>
 
@@ -1615,7 +1606,7 @@ ${generateSmartOfflineFallback(textToSend)}`;
           )}
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></div>
-            <span className="text-xs font-mono text-zinc-400 uppercase tracking-widest font-bold truncate max-w-[120px] sm:max-w-none">Vibranium AI Core</span>
+            <span className="text-xs font-mono text-zinc-400 uppercase tracking-widest font-bold truncate max-w-[120px] sm:max-w-none">Vibranium AI</span>
           </div>
         </div>
 
@@ -2165,404 +2156,43 @@ ${generateSmartOfflineFallback(textToSend)}`;
               </div>
             </div>
           ) : (
-            /* Ask Vibranium wrapper container - Layout varies based on active tools */
-            <div className={`w-full border bg-[#111111] shadow-2xl transition-all duration-300 ${
+            /* Perplexity-style prompt container: input text bar on top above features */
+            <div className={`w-full border bg-[#111111] shadow-2xl rounded-2xl md:rounded-[24px] flex flex-col p-3.5 md:p-4 gap-3 transition-all duration-300 ${
               loadingResponse 
                 ? 'border-indigo-600/70 shadow-[0_0_22px_rgba(124,58,237,0.5)] ring-1 ring-indigo-500/30 animate-pulse' 
-                : 'border-zinc-800 focus-within:border-zinc-700'
-            } ${
-              (webSearchEnabled || deepResearchEnabled || thinkingModeEnabled || imageModeEnabled) 
-                ? 'rounded-[28px] flex flex-col p-4 md:p-5 gap-3.5' 
-                : 'rounded-full flex flex-row items-center gap-2 md:gap-3 py-2 md:py-2.5 pl-4 pr-3'
+                : 'border-zinc-800 focus-within:border-zinc-700 hover:border-zinc-700/80'
             }`}>
             
-            {/* STACKED LAYOUT: When Search, Deep Research, Thinking Mode or Image Mode is active */}
-            {(webSearchEnabled || deepResearchEnabled || thinkingModeEnabled || imageModeEnabled) ? (
-              <>
-                {/* Top Row: Full width input area */}
-                <div className="w-full">
-                  <input
-                    id="chat-input"
-                    type="text"
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    placeholder={
-                      imageModeEnabled
-                        ? "Describe the image you want Vibranium to create..."
-                        : thinkingModeEnabled
-                          ? "Deeply reason and ask Vibranium..."
-                          : webSearchEnabled 
-                            ? "Search web & ask Vibranium..." 
-                            : "Investigate deeply with Vibranium..."
-                    }
-                    disabled={loadingResponse}
-                    className="w-full bg-transparent text-sm text-white placeholder-zinc-600 outline-none font-medium py-1"
-                  />
-                </div>
+              {/* Top Row: Full width input text bar */}
+              <div className="w-full">
+                <input
+                  id="chat-input"
+                  type="text"
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  placeholder={
+                    imageModeEnabled
+                      ? "Describe the image you want Vibranium to create..."
+                      : thinkingModeEnabled
+                        ? "Deeply reason and ask Vibranium..."
+                        : webSearchEnabled 
+                          ? "Search web & ask Vibranium..." 
+                          : mapsGroundingEnabled
+                            ? "Ask Vibranium with Google Maps..."
+                            : deepResearchEnabled
+                              ? "Investigate deeply with Vibranium..."
+                              : "Ask anything..."
+                  }
+                  disabled={loadingResponse}
+                  className="w-full bg-transparent text-sm md:text-base text-white placeholder-zinc-500 outline-none font-medium py-1 px-1"
+                />
+              </div>
 
-                {/* Bottom Row: Separated controls with visual gap */}
-                <div className="flex items-center justify-between w-full border-t border-zinc-900/60 pt-3 mt-1">
-                  
-                  {/* Left Action Elements: Plus button and the active tool badge */}
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    <div className="relative shrink-0 select-none">
-                      <button
-                        id="chat-plus-trigger"
-                        type="button"
-                        onClick={() => setIsPlusDropdownOpen(!isPlusDropdownOpen)}
-                        className="flex items-center justify-center h-8 w-8 rounded-full bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 transition-colors cursor-pointer"
-                        title="Add search tools or attach files"
-                      >
-                        <Plus className={`h-4.5 w-4.5 transition-transform duration-200 ${isPlusDropdownOpen ? 'rotate-45 text-indigo-400' : ''}`} />
-                      </button>
-
-                      {isPlusDropdownOpen && (
-                        <>
-                          <div className="fixed inset-0 z-40" onClick={() => setIsPlusDropdownOpen(false)} />
-                          <div className="absolute left-0 bottom-full mb-3 w-56 rounded-xl bg-zinc-900/95 backdrop-blur border border-zinc-800 shadow-2xl p-2 z-50 flex flex-col gap-1">
-                            
-                            {/* Web Search button */}
-                            <button
-                              type="button"
-                              id="tool-web-search-btn"
-                              onClick={() => {
-                                const nextVal = !webSearchEnabled;
-                                setWebSearchEnabled(nextVal);
-                                if (nextVal) {
-                                  setDeepResearchEnabled(false);
-                                  setThinkingModeEnabled(false);
-                                  setImageModeEnabled(false);
-                                }
-                                setIsPlusDropdownOpen(false);
-                              }}
-                              className={`w-full flex items-center justify-between p-2 rounded-lg transition-all text-xs font-semibold ${
-                                webSearchEnabled 
-                                  ? 'bg-indigo-950/60 border border-indigo-500/20 text-[#a78bfa]' 
-                                  : 'text-zinc-300 hover:text-white hover:bg-zinc-800 border border-transparent'
-                              }`}
-                            >
-                              <div className="flex items-center gap-2.5">
-                                <Globe className={`h-4 w-4 ${webSearchEnabled ? 'text-[#a78bfa]' : 'text-zinc-400'}`} />
-                                <div className="text-left">
-                                  <div>Web Search</div>
-                                  <div className="text-[9px] font-normal text-zinc-500">Enable real-time search grounding</div>
-                                </div>
-                              </div>
-                              {webSearchEnabled && <Check className="h-3.5 w-3.5 text-[#a78bfa] shrink-0" />}
-                            </button>
-
-                            {/* Deep Research button */}
-                            <button
-                              type="button"
-                              id="tool-deep-research-btn"
-                              onClick={() => {
-                                const nextVal = !deepResearchEnabled;
-                                setDeepResearchEnabled(nextVal);
-                                if (nextVal) {
-                                  setWebSearchEnabled(false);
-                                  setThinkingModeEnabled(false);
-                                  setImageModeEnabled(false);
-                                }
-                                setIsPlusDropdownOpen(false);
-                              }}
-                              className={`w-full flex items-center justify-between p-2 rounded-lg transition-all text-xs font-semibold ${
-                                deepResearchEnabled 
-                                  ? 'bg-purple-950/60 border border-purple-500/20 text-purple-300' 
-                                  : 'text-zinc-300 hover:text-white hover:bg-zinc-800 border border-transparent'
-                              }`}
-                            >
-                              <div className="flex items-center gap-2.5">
-                                <Compass className={`h-4 w-4 ${deepResearchEnabled ? 'text-purple-400' : 'text-zinc-400'}`} />
-                                <div className="text-left">
-                                  <div>Deep Research</div>
-                                  <div className="text-[9px] font-normal text-zinc-500">Exhaustive reasoning report</div>
-                                </div>
-                              </div>
-                              {deepResearchEnabled && <Check className="h-3.5 w-3.5 text-purple-400 shrink-0" />}
-                            </button>
-
-                            {/* Thinking Mode button */}
-                            <button
-                              type="button"
-                              id="tool-thinking-mode-btn"
-                              onClick={() => {
-                                const nextVal = !thinkingModeEnabled;
-                                setThinkingModeEnabled(nextVal);
-                                if (nextVal) {
-                                  setWebSearchEnabled(false);
-                                  setDeepResearchEnabled(false);
-                                  setImageModeEnabled(false);
-                                }
-                                setIsPlusDropdownOpen(false);
-                              }}
-                              className={`w-full flex items-center justify-between p-2 rounded-lg transition-all text-xs font-semibold ${
-                                thinkingModeEnabled 
-                                  ? 'bg-amber-950/60 border border-amber-500/20 text-amber-400' 
-                                  : 'text-zinc-300 hover:text-white hover:bg-zinc-800 border border-transparent'
-                              }`}
-                            >
-                              <div className="flex items-center gap-2.5">
-                                <Brain className={`h-4 w-4 ${thinkingModeEnabled ? 'text-amber-400' : 'text-zinc-400'}`} />
-                                <div className="text-left">
-                                  <div>Thinking Mode</div>
-                                  <div className="text-[9px] font-normal text-zinc-500">Advanced step-by-step reasoning</div>
-                                </div>
-                              </div>
-                              {thinkingModeEnabled && <Check className="h-3.5 w-3.5 text-amber-400 shrink-0" />}
-                            </button>
-
-                            {/* Create Image button */}
-                            <button
-                              type="button"
-                              id="tool-create-image-btn"
-                              onClick={() => {
-                                const nextVal = !imageModeEnabled;
-                                setImageModeEnabled(nextVal);
-                                if (nextVal) {
-                                  setWebSearchEnabled(false);
-                                  setDeepResearchEnabled(false);
-                                  setThinkingModeEnabled(false);
-                                }
-                                setIsPlusDropdownOpen(false);
-                              }}
-                              className={`w-full flex items-center justify-between p-2 rounded-lg transition-all text-xs font-semibold ${
-                                imageModeEnabled 
-                                  ? 'bg-emerald-950/60 border border-emerald-500/20 text-emerald-400' 
-                                  : 'text-zinc-300 hover:text-white hover:bg-zinc-800 border border-transparent'
-                              }`}
-                            >
-                              <div className="flex items-center gap-2.5">
-                                <Image className={`h-4 w-4 ${imageModeEnabled ? 'text-emerald-400' : 'text-zinc-400'}`} />
-                                <div className="text-left">
-                                  <div>Create Image</div>
-                                  <div className="text-[9px] font-normal text-zinc-500">Generate creative visual art</div>
-                                </div>
-                              </div>
-                              {imageModeEnabled && <Check className="h-3.5 w-3.5 text-emerald-400 shrink-0" />}
-                            </button>
-
-                            {/* Maps Grounding button */}
-                            <button
-                              type="button"
-                              id="tool-maps-grounding-btn"
-                              onClick={() => {
-                                const nextVal = !mapsGroundingEnabled;
-                                setMapsGroundingEnabled(nextVal);
-                                if (nextVal) {
-                                  setWebSearchEnabled(false);
-                                  setDeepResearchEnabled(false);
-                                  setThinkingModeEnabled(false);
-                                  setImageModeEnabled(false);
-                                }
-                                setIsPlusDropdownOpen(false);
-                              }}
-                              className={`w-full flex items-center justify-between p-2 rounded-lg transition-all text-xs font-semibold ${
-                                mapsGroundingEnabled 
-                                  ? 'bg-emerald-950/60 border border-emerald-500/20 text-emerald-400' 
-                                  : 'text-zinc-300 hover:text-white hover:bg-zinc-800 border border-transparent'
-                              }`}
-                            >
-                              <div className="flex items-center gap-2.5">
-                                <Map className={`h-4 w-4 ${mapsGroundingEnabled ? 'text-emerald-400' : 'text-zinc-400'}`} />
-                                <div className="text-left">
-                                  <div>Google Maps</div>
-                                  <div className="text-[9px] font-normal text-zinc-500">Inject dynamic Maps and Location data</div>
-                                </div>
-                              </div>
-                              {mapsGroundingEnabled && <Check className="h-3.5 w-3.5 text-emerald-400 shrink-0" />}
-                            </button>
-
-                            <div className="h-px bg-zinc-800/65 my-1" />
-
-                            {/* Upload Files button */}
-                            <button
-                              type="button"
-                              id="tool-upload-files-btn"
-                              onClick={() => {
-                                fileInputRef.current?.click();
-                                setIsPlusDropdownOpen(false);
-                              }}
-                              className="w-full flex items-center gap-2.5 p-2 rounded-lg text-zinc-300 hover:text-white hover:bg-zinc-800 border border-transparent transition-all text-xs font-semibold"
-                            >
-                              <Paperclip className="h-4 w-4 text-zinc-400" />
-                              <div className="text-left">
-                                <div>Upload files</div>
-                                <div className="text-[9px] font-normal text-zinc-500">Support desktop & mobile explorers</div>
-                              </div>
-                            </button>
-
-                          </div>
-                        </>
-                      )}
-                    </div>
-
-                    {/* Web Search purple active badge with hovered cancel cross */}
-                    {webSearchEnabled && (
-                      <div className="group flex items-center bg-[#7c3aed]/10 border border-[#7c3aed]/25 hover:border-[#7c3aed]/50 text-[#a78bfa] text-[11px] px-2 py-0.5 rounded-full font-semibold select-none whitespace-nowrap transition-all duration-200">
-                        <div className="flex items-center gap-1.5">
-                          <Globe className="h-3.5 w-3.5 shrink-0 text-[#a78bfa]" />
-                          <span>Web Search</span>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            setWebSearchEnabled(false);
-                          }}
-                          className="w-0 opacity-0 overflow-hidden group-hover:w-4 group-hover:opacity-100 transition-all duration-200 ml-0 group-hover:ml-1.5 flex items-center justify-center p-0 rounded-full hover:bg-[#7c3aed]/20 text-[#a78bfa] hover:text-white cursor-pointer shrink-0"
-                          title="Disable Web Search"
-                        >
-                          <X className="h-3 w-3 shrink-0" />
-                        </button>
-                      </div>
-                    )}
-
-                    {/* Deep Research pink active badge with hovered cancel cross */}
-                    {deepResearchEnabled && (
-                      <div className="group flex items-center bg-pink-500/10 border border-pink-500/25 text-pink-300 text-[11px] px-2 py-0.5 rounded-full font-semibold select-none whitespace-nowrap transition-all duration-200">
-                        <div className="flex items-center gap-1.5">
-                          <Compass className="h-3.5 w-3.5 shrink-0 text-pink-400 animate-spin" style={{ animationDuration: '6s' }} />
-                          <span>Deep Research</span>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            setDeepResearchEnabled(false);
-                          }}
-                          className="w-0 opacity-0 overflow-hidden group-hover:w-4 group-hover:opacity-100 transition-all duration-200 ml-0 group-hover:ml-1.5 flex items-center justify-center p-0 rounded-full hover:bg-pink-500/20 text-pink-300 hover:text-white cursor-pointer shrink-0"
-                          title="Disable Deep Research"
-                        >
-                          <X className="h-3 w-3 shrink-0" />
-                        </button>
-                      </div>
-                    )}
-
-                    {/* Thinking Mode amber active badge with hovered cancel cross */}
-                    {thinkingModeEnabled && (
-                      <div className="group flex items-center bg-amber-500/10 border border-amber-500/25 text-amber-400 text-[11px] px-2 py-0.5 rounded-full font-semibold select-none whitespace-nowrap transition-all duration-200">
-                        <div className="flex items-center gap-1.5">
-                          <Brain className="h-3.5 w-3.5 shrink-0 text-amber-400 animate-pulse" />
-                          <span>Thinking Mode</span>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            setThinkingModeEnabled(false);
-                          }}
-                          className="w-0 opacity-0 overflow-hidden group-hover:w-4 group-hover:opacity-100 transition-all duration-200 ml-0 group-hover:ml-1.5 flex items-center justify-center p-0 rounded-full hover:bg-amber-500/20 text-amber-400 hover:text-white cursor-pointer shrink-0"
-                          title="Disable Thinking Mode"
-                        >
-                          <X className="h-3 w-3 shrink-0" />
-                        </button>
-                      </div>
-                    )}
-
-                    {/* Create Image emerald active badge with hovered cancel cross */}
-                    {imageModeEnabled && (
-                      <div className="group flex items-center bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 text-[11px] px-2 py-0.5 rounded-full font-semibold select-none whitespace-nowrap transition-all duration-200">
-                        <div className="flex items-center gap-1.5">
-                          <Image className="h-3.5 w-3.5 shrink-0 text-emerald-400 animate-pulse" />
-                          <span>Create Image</span>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            setImageModeEnabled(false);
-                          }}
-                          className="w-0 opacity-0 overflow-hidden group-hover:w-4 group-hover:opacity-100 transition-all duration-200 ml-0 group-hover:ml-1.5 flex items-center justify-center p-0 rounded-full hover:bg-emerald-500/20 text-emerald-400 hover:text-white cursor-pointer shrink-0"
-                          title="Disable Create Image"
-                        >
-                          <X className="h-3 w-3 shrink-0" />
-                        </button>
-                      </div>
-                    )}
-
-                    {/* Google Maps active badge with hovered cancel cross */}
-                    {mapsGroundingEnabled && (
-                      <div className="group flex items-center bg-teal-500/10 border border-teal-500/25 text-teal-300 text-[11px] px-2 py-0.5 rounded-full font-semibold select-none whitespace-nowrap transition-all duration-200">
-                        <div className="flex items-center gap-1.5">
-                          <Map className="h-3.5 w-3.5 shrink-0 text-teal-400 animate-pulse" />
-                          <span>Google Maps</span>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            setMapsGroundingEnabled(false);
-                          }}
-                          className="w-0 opacity-0 overflow-hidden group-hover:w-4 group-hover:opacity-100 transition-all duration-200 ml-0 group-hover:ml-1.5 flex items-center justify-center p-0 rounded-full hover:bg-teal-500/20 text-teal-300 hover:text-white cursor-pointer shrink-0"
-                          title="Disable Google Maps"
-                        >
-                          <X className="h-3 w-3 shrink-0" />
-                        </button>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Spacer - Middle space (User cannot write here) */}
-                  <div className="flex-1" />
-
-                  {/* Right Action Elements: Model Select + Mic + Send */}
-                  <div className="flex items-center gap-1.5 shrink-0 select-none">
-                    
-                    {/* Model Dropdown Selector */}
-                    {renderModelSelectorDropdown()}
-
-                    {/* Voice dictate button */}
-                    <button
-                      id="chat-mic-btn"
-                      type="button"
-                      onClick={toggleListening}
-                      className={`rounded-full p-2 transition-all ${
-                        isListening 
-                          ? 'bg-indigo-600 text-white animate-pulse shadow shadow-indigo-600/35' 
-                          : 'text-zinc-500 hover:text-white hover:bg-zinc-800'
-                      }`}
-                      title={isListening ? 'Stop capturing voice' : 'Dictate message'}
-                    >
-                      {isListening ? <MicOff className="h-4.5 w-4.5" /> : <Mic className="h-4.5 w-4.5" />}
-                    </button>
-
-                    {/* Submit or Stop button */}
-                    {loadingResponse ? (
-                      <button
-                        id="chat-stop-btn"
-                        type="button"
-                        onClick={handleStopGeneration}
-                        className="rounded-full bg-indigo-600 hover:bg-indigo-500 p-2 text-white shadow-lg shadow-indigo-600/30 transition-all hover:scale-105 active:scale-95 flex items-center justify-center cursor-pointer"
-                        title="Stop generating response"
-                      >
-                        <Square className="h-3.5 w-3.5 fill-current" />
-                      </button>
-                    ) : (
-                      <button
-                        id="chat-submit-btn"
-                        type="submit"
-                        disabled={!input.trim()}
-                        className="rounded-full bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-600/20 p-2 text-white disabled:text-zinc-500 shadow-lg shadow-indigo-600/20 transition-all hover:scale-105 active:scale-95 disabled:hover:scale-100 disabled:active:scale-100 cursor-pointer"
-                        title="Send message"
-                      >
-                        <Send className="h-4 w-4" />
-                      </button>
-                    )}
-
-                  </div>
-
-                </div>
-              </>
-            ) : (
-              /* INLINE LAYOUT: Original inline single-line state when no tools are selected */
-              <>
-                {/* Plus (+) button on the Left */}
-                <div className="flex items-center gap-1.5 shrink-0">
+              {/* Bottom Row: Controls bar with Plus Icon & Badges on Left, Model Select, Dictation, & Send on Right */}
+              <div className="flex items-center justify-between w-full pt-2 border-t border-zinc-900/60">
+                
+                {/* Left Side: Plus Icon dropdown & Active feature badges */}
+                <div className="flex items-center gap-1.5 shrink-0 flex-wrap">
                   <div className="relative shrink-0 select-none">
                     <button
                       id="chat-plus-trigger"
@@ -2578,7 +2208,8 @@ ${generateSmartOfflineFallback(textToSend)}`;
                       <>
                         <div className="fixed inset-0 z-40" onClick={() => setIsPlusDropdownOpen(false)} />
                         <div className="absolute left-0 bottom-full mb-3 w-56 rounded-xl bg-zinc-900/95 backdrop-blur border border-zinc-800 shadow-2xl p-2 z-50 flex flex-col gap-1">
-                                           {/* Web Search button */}
+                          
+                          {/* Web Search button */}
                           <button
                             type="button"
                             id="tool-web-search-btn"
@@ -2586,9 +2217,10 @@ ${generateSmartOfflineFallback(textToSend)}`;
                               const nextVal = !webSearchEnabled;
                               setWebSearchEnabled(nextVal);
                               if (nextVal) {
-                                  setDeepResearchEnabled(false);
-                                  setThinkingModeEnabled(false);
-                                  setImageModeEnabled(false);
+                                setDeepResearchEnabled(false);
+                                setThinkingModeEnabled(false);
+                                setImageModeEnabled(false);
+                                setMapsGroundingEnabled(false);
                               }
                               setIsPlusDropdownOpen(false);
                             }}
@@ -2616,9 +2248,10 @@ ${generateSmartOfflineFallback(textToSend)}`;
                               const nextVal = !deepResearchEnabled;
                               setDeepResearchEnabled(nextVal);
                               if (nextVal) {
-                                  setWebSearchEnabled(false);
-                                  setThinkingModeEnabled(false);
-                                  setImageModeEnabled(false);
+                                setWebSearchEnabled(false);
+                                setThinkingModeEnabled(false);
+                                setImageModeEnabled(false);
+                                setMapsGroundingEnabled(false);
                               }
                               setIsPlusDropdownOpen(false);
                             }}
@@ -2646,9 +2279,10 @@ ${generateSmartOfflineFallback(textToSend)}`;
                               const nextVal = !thinkingModeEnabled;
                               setThinkingModeEnabled(nextVal);
                               if (nextVal) {
-                                  setWebSearchEnabled(false);
-                                  setDeepResearchEnabled(false);
-                                  setImageModeEnabled(false);
+                                setWebSearchEnabled(false);
+                                setDeepResearchEnabled(false);
+                                setImageModeEnabled(false);
+                                setMapsGroundingEnabled(false);
                               }
                               setIsPlusDropdownOpen(false);
                             }}
@@ -2679,6 +2313,7 @@ ${generateSmartOfflineFallback(textToSend)}`;
                                 setWebSearchEnabled(false);
                                 setDeepResearchEnabled(false);
                                 setThinkingModeEnabled(false);
+                                setMapsGroundingEnabled(false);
                               }
                               setIsPlusDropdownOpen(false);
                             }}
@@ -2748,38 +2383,137 @@ ${generateSmartOfflineFallback(textToSend)}`;
                             </div>
                           </button>
 
-                         </div>
+                        </div>
                       </>
                     )}
                   </div>
+
+                  {/* Web Search purple active badge with hovered cancel cross */}
+                  {webSearchEnabled && (
+                    <div className="group flex items-center bg-[#7c3aed]/10 border border-[#7c3aed]/25 hover:border-[#7c3aed]/50 text-[#a78bfa] text-[11px] px-2 py-0.5 rounded-full font-semibold select-none whitespace-nowrap transition-all duration-200">
+                      <div className="flex items-center gap-1.5">
+                        <Globe className="h-3.5 w-3.5 shrink-0 text-[#a78bfa]" />
+                        <span>Web Search</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setWebSearchEnabled(false);
+                        }}
+                        className="w-0 opacity-0 overflow-hidden group-hover:w-4 group-hover:opacity-100 transition-all duration-200 ml-0 group-hover:ml-1.5 flex items-center justify-center p-0 rounded-full hover:bg-[#7c3aed]/20 text-[#a78bfa] hover:text-white cursor-pointer shrink-0"
+                        title="Disable Web Search"
+                      >
+                        <X className="h-3 w-3 shrink-0" />
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Deep Research pink active badge with hovered cancel cross */}
+                  {deepResearchEnabled && (
+                    <div className="group flex items-center bg-pink-500/10 border border-pink-500/25 text-pink-300 text-[11px] px-2 py-0.5 rounded-full font-semibold select-none whitespace-nowrap transition-all duration-200">
+                      <div className="flex items-center gap-1.5">
+                        <Compass className="h-3.5 w-3.5 shrink-0 text-pink-400 animate-spin" style={{ animationDuration: '6s' }} />
+                        <span>Deep Research</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setDeepResearchEnabled(false);
+                        }}
+                        className="w-0 opacity-0 overflow-hidden group-hover:w-4 group-hover:opacity-100 transition-all duration-200 ml-0 group-hover:ml-1.5 flex items-center justify-center p-0 rounded-full hover:bg-pink-500/20 text-pink-300 hover:text-white cursor-pointer shrink-0"
+                        title="Disable Deep Research"
+                      >
+                        <X className="h-3 w-3 shrink-0" />
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Thinking Mode amber active badge with hovered cancel cross */}
+                  {thinkingModeEnabled && (
+                    <div className="group flex items-center bg-amber-500/10 border border-amber-500/25 text-amber-400 text-[11px] px-2 py-0.5 rounded-full font-semibold select-none whitespace-nowrap transition-all duration-200">
+                      <div className="flex items-center gap-1.5">
+                        <Brain className="h-3.5 w-3.5 shrink-0 text-amber-400 animate-pulse" />
+                        <span>Thinking Mode</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setThinkingModeEnabled(false);
+                        }}
+                        className="w-0 opacity-0 overflow-hidden group-hover:w-4 group-hover:opacity-100 transition-all duration-200 ml-0 group-hover:ml-1.5 flex items-center justify-center p-0 rounded-full hover:bg-amber-500/20 text-amber-400 hover:text-white cursor-pointer shrink-0"
+                        title="Disable Thinking Mode"
+                      >
+                        <X className="h-3 w-3 shrink-0" />
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Create Image emerald active badge with hovered cancel cross */}
+                  {imageModeEnabled && (
+                    <div className="group flex items-center bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 text-[11px] px-2 py-0.5 rounded-full font-semibold select-none whitespace-nowrap transition-all duration-200">
+                      <div className="flex items-center gap-1.5">
+                        <Image className="h-3.5 w-3.5 shrink-0 text-emerald-400 animate-pulse" />
+                        <span>Create Image</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setImageModeEnabled(false);
+                        }}
+                        className="w-0 opacity-0 overflow-hidden group-hover:w-4 group-hover:opacity-100 transition-all duration-200 ml-0 group-hover:ml-1.5 flex items-center justify-center p-0 rounded-full hover:bg-emerald-500/20 text-emerald-400 hover:text-white cursor-pointer shrink-0"
+                        title="Disable Create Image"
+                      >
+                        <X className="h-3 w-3 shrink-0" />
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Google Maps active badge with hovered cancel cross */}
+                  {mapsGroundingEnabled && (
+                    <div className="group flex items-center bg-teal-500/10 border border-teal-500/25 text-teal-300 text-[11px] px-2 py-0.5 rounded-full font-semibold select-none whitespace-nowrap transition-all duration-200">
+                      <div className="flex items-center gap-1.5">
+                        <Map className="h-3.5 w-3.5 shrink-0 text-teal-400 animate-pulse" />
+                        <span>Google Maps</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setMapsGroundingEnabled(false);
+                        }}
+                        className="w-0 opacity-0 overflow-hidden group-hover:w-4 group-hover:opacity-100 transition-all duration-200 ml-0 group-hover:ml-1.5 flex items-center justify-center p-0 rounded-full hover:bg-teal-500/20 text-teal-300 hover:text-white cursor-pointer shrink-0"
+                        title="Disable Google Maps"
+                      >
+                        <X className="h-3 w-3 shrink-0" />
+                      </button>
+                    </div>
+                  )}
                 </div>
 
-                {/* Input area */}
-                <input
-                  id="chat-input"
-                  type="text"
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  placeholder="Ask Vibranium..."
-                  disabled={loadingResponse}
-                  className="flex-1 bg-transparent text-sm text-white placeholder-zinc-600 outline-none font-medium py-1 px-1.5 min-w-0"
-                />
-
-                {/* Tools Area on Right of text */}
-                <div className="flex items-center gap-1 md:gap-1.5 shrink-0 select-none">
+                {/* Right Side: Model Selector + Dictation Mic + Send Button */}
+                <div className="flex items-center gap-1.5 md:gap-2 shrink-0 select-none">
                   
-                  {/* Inline Model Dropdown Selector */}
+                  {/* Model Dropdown Selector */}
                   {renderModelSelectorDropdown('up')}
 
-                  {/* Voice dictate button */}
+                  {/* Voice dictate mic button */}
                   <button
                     id="chat-mic-btn"
                     type="button"
                     onClick={toggleListening}
-                    className={`rounded-full p-1.5 md:p-2 transition-all ${
+                    className={`rounded-full p-2 transition-all ${
                       isListening 
                         ? 'bg-indigo-600 text-white animate-pulse shadow shadow-indigo-600/35' 
-                        : 'text-zinc-500 hover:text-white hover:bg-zinc-800'
+                        : 'text-zinc-400 hover:text-white hover:bg-zinc-800'
                     }`}
                     title={isListening ? 'Stop capturing voice' : 'Dictate message'}
                   >
@@ -2792,7 +2526,7 @@ ${generateSmartOfflineFallback(textToSend)}`;
                       id="chat-stop-btn"
                       type="button"
                       onClick={handleStopGeneration}
-                      className="rounded-full bg-indigo-600 hover:bg-indigo-500 p-1.5 md:p-2 text-white shadow-lg shadow-indigo-600/30 transition-all hover:scale-105 active:scale-95 flex items-center justify-center cursor-pointer"
+                      className="rounded-full bg-indigo-600 hover:bg-indigo-500 p-2 text-white shadow-lg shadow-indigo-600/30 transition-all hover:scale-105 active:scale-95 flex items-center justify-center cursor-pointer"
                       title="Stop generating response"
                     >
                       <Square className="h-3.5 w-3.5 fill-current" />
@@ -2802,7 +2536,7 @@ ${generateSmartOfflineFallback(textToSend)}`;
                       id="chat-submit-btn"
                       type="submit"
                       disabled={!input.trim()}
-                      className="rounded-full bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-600/20 p-1.5 md:p-2 text-white disabled:text-zinc-500 shadow-lg shadow-indigo-600/20 transition-all hover:scale-105 active:scale-95 disabled:hover:scale-100 disabled:active:scale-100 cursor-pointer"
+                      className="rounded-full bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-600/20 p-2 text-white disabled:text-zinc-500 shadow-lg shadow-indigo-600/20 transition-all hover:scale-105 active:scale-95 disabled:hover:scale-100 disabled:active:scale-100 flex items-center justify-center cursor-pointer"
                       title="Send message"
                     >
                       <Send className="h-4 w-4" />
@@ -2810,10 +2544,9 @@ ${generateSmartOfflineFallback(textToSend)}`;
                   )}
 
                 </div>
-              </>
-            )}
 
-          </div>
+              </div>
+            </div>
           )}
         </form>
 
