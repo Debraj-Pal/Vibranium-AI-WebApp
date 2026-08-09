@@ -1,10 +1,8 @@
-name: 'Capacitor Android Build'
+name: Capacitor Android Build
 
 on:
   push:
-    branches: [ main, develop, 'feature/*' ]
   pull_request:
-    branches: [ main, develop ]
   workflow_dispatch:
 
 concurrency:

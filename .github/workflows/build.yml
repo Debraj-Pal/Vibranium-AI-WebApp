@@ -1,4 +1,4 @@
-name: 'Web Production Build'
+name: Web Production Build
 
 on:
   push:
