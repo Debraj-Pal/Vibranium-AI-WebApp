@@ -168,27 +168,32 @@ EOF
           fi
 
       - name: Locate and Prepare Android Artifacts
+        if: always()
         run: |
           mkdir -p build-output/apk build-output/aab build-output/logs
           find android/app/build/outputs/apk/ -name "*.apk" -exec cp {} build-output/apk/ \; || true
           find android/app/build/outputs/bundle/ -name "*.aab" -exec cp {} build-output/aab/ \; || true
+          echo "=== Found APK Artifacts ==="
           ls -la build-output/apk/
+          echo "=== Found AAB Artifacts ==="
           ls -la build-output/aab/
 
       - name: Upload Android APKs Artifact
         uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: vibranium-android-apks
           path: build-output/apk/
-          if-no-files-found: ignore
+          if-no-files-found: warn
           retention-days: 14
 
       - name: Upload Android AAB Artifact
         uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: vibranium-android-aab
           path: build-output/aab/
-          if-no-files-found: ignore
+          if-no-files-found: warn
           retention-days: 14
 
       - name: Generate Android Build Summary
