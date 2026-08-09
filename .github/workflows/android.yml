@@ -57,15 +57,7 @@ jobs:
           mkdir -p android/gradle/wrapper
           if [ ! -f "android/gradle/wrapper/gradle-wrapper.properties" ] || [ ! -s "android/gradle/wrapper/gradle-wrapper.properties" ]; then
             echo "gradle-wrapper.properties missing or empty. Writing properties..."
-            cat << 'EOF' > android/gradle/wrapper/gradle-wrapper.properties
-distributionBase=GRADLE_USER_HOME
-distributionPath=wrapper/dists
-distributionUrl=https\://services.gradle.org/distributions/gradle-8.14.3-all.zip
-networkTimeout=10000
-validateDistributionUrl=true
-zipStoreBase=GRADLE_USER_HOME
-zipStorePath=wrapper/dists
-EOF
+            printf 'distributionBase=GRADLE_USER_HOME\ndistributionPath=wrapper/dists\ndistributionUrl=https\\://services.gradle.org/distributions/gradle-8.14.3-all.zip\nnetworkTimeout=10000\nvalidateDistributionUrl=true\nzipStoreBase=GRADLE_USER_HOME\nzipStorePath=wrapper/dists\n' > android/gradle/wrapper/gradle-wrapper.properties
           fi
           if [ ! -f "android/gradle/wrapper/gradle-wrapper.jar" ] || [ ! -s "android/gradle/wrapper/gradle-wrapper.jar" ]; then
             echo "gradle-wrapper.jar missing or empty. Fetching Gradle Wrapper JAR..."
@@ -96,15 +88,7 @@ EOF
           mkdir -p android/gradle/wrapper
           if [ ! -f "android/gradle/wrapper/gradle-wrapper.properties" ] || [ ! -s "android/gradle/wrapper/gradle-wrapper.properties" ]; then
             echo "gradle-wrapper.properties missing or empty. Writing properties..."
-            cat << 'EOF' > android/gradle/wrapper/gradle-wrapper.properties
-distributionBase=GRADLE_USER_HOME
-distributionPath=wrapper/dists
-distributionUrl=https\://services.gradle.org/distributions/gradle-8.14.3-all.zip
-networkTimeout=10000
-validateDistributionUrl=true
-zipStoreBase=GRADLE_USER_HOME
-zipStorePath=wrapper/dists
-EOF
+            printf 'distributionBase=GRADLE_USER_HOME\ndistributionPath=wrapper/dists\ndistributionUrl=https\\://services.gradle.org/distributions/gradle-8.14.3-all.zip\nnetworkTimeout=10000\nvalidateDistributionUrl=true\nzipStoreBase=GRADLE_USER_HOME\nzipStorePath=wrapper/dists\n' > android/gradle/wrapper/gradle-wrapper.properties
           fi
           if [ ! -f "android/gradle/wrapper/gradle-wrapper.jar" ] || [ ! -s "android/gradle/wrapper/gradle-wrapper.jar" ]; then
             echo "gradle-wrapper.jar missing or empty. Fetching Gradle Wrapper JAR..."
@@ -120,15 +104,7 @@ EOF
           cd android
           mkdir -p gradle/wrapper
           if [ ! -f "gradle/wrapper/gradle-wrapper.properties" ] || [ ! -s "gradle/wrapper/gradle-wrapper.properties" ]; then
-            cat << 'EOF' > gradle/wrapper/gradle-wrapper.properties
-distributionBase=GRADLE_USER_HOME
-distributionPath=wrapper/dists
-distributionUrl=https\://services.gradle.org/distributions/gradle-8.14.3-all.zip
-networkTimeout=10000
-validateDistributionUrl=true
-zipStoreBase=GRADLE_USER_HOME
-zipStorePath=wrapper/dists
-EOF
+            printf 'distributionBase=GRADLE_USER_HOME\ndistributionPath=wrapper/dists\ndistributionUrl=https\\://services.gradle.org/distributions/gradle-8.14.3-all.zip\nnetworkTimeout=10000\nvalidateDistributionUrl=true\nzipStoreBase=GRADLE_USER_HOME\nzipStorePath=wrapper/dists\n' > gradle/wrapper/gradle-wrapper.properties
           fi
           if [ ! -f "gradle/wrapper/gradle-wrapper.jar" ] || [ ! -s "gradle/wrapper/gradle-wrapper.jar" ]; then
             curl -sSL "https://raw.githubusercontent.com/gradle/gradle/master/gradle/wrapper/gradle-wrapper.jar" -o gradle/wrapper/gradle-wrapper.jar || true
