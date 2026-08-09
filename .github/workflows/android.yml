@@ -50,8 +50,9 @@ jobs:
 
       - name: 'Add or Sync Capacitor Android Platform'
         run: |
-          if [ ! -d "android" ]; then
-            echo "Android platform directory missing, adding Capacitor Android..."
+          if [ ! -d "android" ] || [ ! -f "android/settings.gradle" ] || [ ! -f "android/build.gradle" ]; then
+            echo "Android platform missing or incomplete, initializing Capacitor Android..."
+            rm -rf android
             npx cap add android
           fi
           mkdir -p android/gradle/wrapper

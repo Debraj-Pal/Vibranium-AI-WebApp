@@ -61,7 +61,9 @@ jobs:
 
       - name: Sync Capacitor Android
         run: |
-          if [ ! -d "android" ]; then
+          if [ ! -d "android" ] || [ ! -f "android/settings.gradle" ] || [ ! -f "android/build.gradle" ]; then
+            echo "Android platform missing or incomplete, initializing Capacitor Android..."
+            rm -rf android
             npx cap add android
           fi
           mkdir -p android/gradle/wrapper
