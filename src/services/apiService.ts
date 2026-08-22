@@ -1,4 +1,4 @@
-import { getApiUrl } from '../lib/api';
+import { getApiUrl, safeApiFetch } from '../lib/api';
 
 /**
  * Service Layer for Vibranium AI Network & Proxy API Operations
@@ -10,9 +10,8 @@ export const ApiService = {
     return getApiUrl(endpoint);
   },
 
-  /** Generic fetch wrapper handling relative & external origins */
+  /** Safe fetch wrapper handling relative, Vercel Serverless, and Cloud Run fallback */
   async fetchApi(endpoint: string, options: RequestInit = {}): Promise<Response> {
-    const url = getApiUrl(endpoint);
-    return fetch(url, options);
+    return safeApiFetch(endpoint, options);
   }
 };

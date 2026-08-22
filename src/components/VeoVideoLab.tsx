@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { getApiUrl } from '../lib/api';
+import { getApiUrl, safeApiFetch } from '../lib/api';
 import { db } from '../lib/firebase';
 import { collection, addDoc, query, getDocs, orderBy, doc, deleteDoc } from 'firebase/firestore';
 import { 
@@ -154,7 +154,7 @@ export default function VeoVideoLab({ currentUser }: VeoVideoLabProps) {
 
     const interval = setInterval(async () => {
       try {
-        const res = await fetch(getApiUrl('/api/video-status'), {
+        const res = await safeApiFetch('/api/video-status', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ operationName })
@@ -229,7 +229,7 @@ export default function VeoVideoLab({ currentUser }: VeoVideoLabProps) {
         imageBase64 = referenceImage.split(',')[1];
       }
 
-      const res = await fetch(getApiUrl('/api/generate-video'), {
+      const res = await safeApiFetch('/api/generate-video', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

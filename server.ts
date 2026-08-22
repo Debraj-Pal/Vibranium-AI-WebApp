@@ -20,6 +20,22 @@ app.use((req, res, next) => {
   if (req.method === "OPTIONS") {
     return res.sendStatus(200);
   }
+
+  // Ensure requests starting without /api get normalized if handled by Vercel serverless
+  if (!req.url.startsWith("/api") && !req.url.startsWith("/assets") && !req.url.startsWith("/favicon")) {
+    // If request is like /news, /chat, /translate -> map to /api/...
+    if (
+      req.url.startsWith("/chat") || 
+      req.url.startsWith("/news") || 
+      req.url.startsWith("/translate") || 
+      req.url.startsWith("/generate-video") || 
+      req.url.startsWith("/video-status") || 
+      req.url.startsWith("/firebase-config") ||
+      req.url.startsWith("/health")
+    ) {
+      req.url = `/api${req.url}`;
+    }
+  }
   next();
 });
 
@@ -2138,22 +2154,24 @@ Return ONLY a raw JSON object (no markdown, no backticks, pure JSON):
   }
 });
 
-// Serve frontend
-if (process.env.NODE_ENV === "production") {
-  const distPath = path.join(process.cwd(), "dist");
-  app.use(express.static(distPath));
-  app.get("*", (req, res) => {
-    res.sendFile(path.join(distPath, "index.html"));
-  });
-} else {
-  import("vite").then(({ createServer }) => {
-    createServer({
-      server: { middlewareMode: true },
-      appType: "spa",
-    }).then((vite) => {
-      app.use(vite.middlewares);
+// Serve frontend (only in dedicated server mode, not inside Vercel serverless)
+if (!process.env.VERCEL) {
+  if (process.env.NODE_ENV === "production") {
+    const distPath = path.join(process.cwd(), "dist");
+    app.use(express.static(distPath));
+    app.get("*", (req, res) => {
+      res.sendFile(path.join(distPath, "index.html"));
     });
-  });
+  } else {
+    import("vite").then(({ createServer }) => {
+      createServer({
+        server: { middlewareMode: true },
+        appType: "spa",
+      }).then((vite) => {
+        app.use(vite.middlewares);
+      });
+    });
+  }
 }
 
 if (!process.env.VERCEL) {

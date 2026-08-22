@@ -6,9 +6,7 @@ import { Capacitor } from '@capacitor/core';
 const FALLBACK_BACKEND_URL = 'https://vibranium-ai-349153338672.us-west1.run.app';
 
 /**
- * Dynamically resolves the API endpoint URL depending on the runtime platform.
- * If running on Cloud Run, AI Studio preview, or local dev server (port 3000/5173), relative paths are used.
- * For Capacitor Android/iOS Native apps or Vercel deployments, requests are routed to the live backend server.
+ * Resolves the primary API endpoint URL.
  */
 export function getApiUrl(endpoint: string): string {
   const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
@@ -22,20 +20,52 @@ export function getApiUrl(endpoint: string): string {
 
   const origin = typeof window !== 'undefined' ? window.location.origin : '';
   
-  // Detect Capacitor Native Container or Native protocols (Android/iOS APK)
+  // Detect Capacitor Native Container or file protocols
   const isNativeMobile = 
     Capacitor.isNativePlatform() ||
     origin.startsWith('capacitor:') ||
-    origin.startsWith('file:') ||
-    (origin.includes('localhost') && !origin.includes(':3000') && !origin.includes(':5173') && !origin.includes(':3001'));
+    origin.startsWith('file:');
 
   if (isNativeMobile) {
     return `${FALLBACK_BACKEND_URL}${cleanEndpoint}`;
   }
 
-  // Web environments (Vercel, Cloud Run, AI Studio, local preview, custom domains)
-  // use relative same-origin routes directly.
+  // If hosted on Vercel without a configured custom backend, use relative path
   return cleanEndpoint;
+}
+
+/**
+ * Safe fetch wrapper that tries same-origin API first, and seamlessly falls back
+ * to the high-availability Cloud Run backend if Vercel serverless fails or is unconfigured.
+ */
+export async function safeApiFetch(endpoint: string, options: RequestInit = {}): Promise<Response> {
+  const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+  const primaryUrl = getApiUrl(cleanEndpoint);
+
+  try {
+    const res = await fetch(primaryUrl, options);
+    // If response is valid JSON or non-error, return it
+    if (res.ok) {
+      return res;
+    }
+
+    // If Vercel returns 404, 500, 502, 503 or HTML index page instead of API JSON, fallback to Cloud Run
+    const contentType = res.headers.get('content-type') || '';
+    if (res.status === 404 || res.status >= 500 || contentType.includes('text/html')) {
+      if (!primaryUrl.startsWith(FALLBACK_BACKEND_URL)) {
+        console.warn(`[API Info] Primary endpoint ${primaryUrl} returned ${res.status}. Falling back to Live Backend...`);
+        return await fetch(`${FALLBACK_BACKEND_URL}${cleanEndpoint}`, options);
+      }
+    }
+    return res;
+  } catch (err) {
+    // Network / CORS / routing error -> fallback to live Cloud Run backend
+    if (!primaryUrl.startsWith(FALLBACK_BACKEND_URL)) {
+      console.warn(`[API Info] Network error on ${primaryUrl}. Falling back to Live Backend:`, err);
+      return await fetch(`${FALLBACK_BACKEND_URL}${cleanEndpoint}`, options);
+    }
+    throw err;
+  }
 }
 
 /**

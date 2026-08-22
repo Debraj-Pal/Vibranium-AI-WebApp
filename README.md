@@ -40,12 +40,12 @@ Discover the sleek, futuristic aesthetics of **Vibranium AI**, designed with obs
 
 | 💬 **AI Assistant Chat** | 🌐 **Live Language Translator** |
 | :---: | :---: |
-| <img src="https://raw.githubusercontent.com/Debraj-Pal/Vibranium-AI-WebApp/main/docs/screenshots/chat_screen.png" alt="Vibranium AI Chat" width="460"/> | <img src="https://raw.githubusercontent.com/Debraj-Pal/Vibranium-AI-WebApp/main/docs/screenshots/translator_screen.png" alt="Live Translator" width="460"/> |
+| <img src="./docs/screenshots/chat_screen.png" alt="Vibranium AI Chat" width="460"/> | <img src="./docs/screenshots/translator_screen.png" alt="Live Translator" width="460"/> |
 | *Intelligent conversational interface with dynamic model switching & prompt shortcuts* | *Instant real-time voice & text translation with auto language detection* |
 
 | 📰 **Vibranium Bulletin (Live News)** | 🎬 **Veo Video Lab & Studio** |
 | :---: | :---: |
-| <img src="https://raw.githubusercontent.com/Debraj-Pal/Vibranium-AI-WebApp/main/docs/screenshots/bulletin_screen.png" alt="Vibranium Bulletin" width="460"/> | <img src="https://raw.githubusercontent.com/Debraj-Pal/Vibranium-AI-WebApp/main/docs/screenshots/veo_lab_screen.png" alt="Veo Video Lab" width="460"/> |
+| <img src="./docs/screenshots/bulletin_screen.png" alt="Vibranium Bulletin" width="460"/> | <img src="./docs/screenshots/veo_lab_screen.png" alt="Veo Video Lab" width="460"/> |
 | *Real-time curated news intelligence, categories & summaries* | *High-fidelity generative video production and creative media studio* |
 
 ---

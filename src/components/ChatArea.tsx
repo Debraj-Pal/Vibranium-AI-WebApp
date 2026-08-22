@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback, useLayoutEffect } from 'react';
 import Markdown from 'react-markdown';
-import { getApiUrl } from '../lib/api';
+import { getApiUrl, safeApiFetch } from '../lib/api';
 import { db } from '../lib/firebase';
 import { collection, addDoc, serverTimestamp, query, orderBy, onSnapshot, getDocs, doc, updateDoc, getDoc } from 'firebase/firestore';
 import { 
@@ -1207,7 +1207,7 @@ export default function ChatArea({
       let fetchErrorMsg = '';
 
       try {
-        response = await fetch(getApiUrl('/api/chat'), {
+        response = await safeApiFetch('/api/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           signal: controller.signal,

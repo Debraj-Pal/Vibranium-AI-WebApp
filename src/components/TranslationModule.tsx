@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Markdown from 'react-markdown';
-import { getApiUrl } from '../lib/api';
+import { getApiUrl, safeApiFetch } from '../lib/api';
 import { 
   Languages, 
   Copy, 
@@ -57,7 +57,7 @@ export default function TranslationModule({ speechRate }: TranslationModuleProps
     setError('');
     try {
       const targetLangName = LANGUAGES.find(l => l.code === targetLang)?.name || targetLang;
-      const response = await fetch(getApiUrl('/api/translate'), {
+      const response = await safeApiFetch('/api/translate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
