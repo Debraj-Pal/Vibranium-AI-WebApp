@@ -1,8 +1,8 @@
-# 🌌 Vibranium AI
+# <img src="./public/favicon.svg" alt="Vibranium AI Logo" width="34" height="34" style="vertical-align: middle; display: inline-block;" /> Vibranium AI
 
 <div align="center">
 
-  <img src="https://raw.githubusercontent.com/Debraj-Pal/Vibranium-AI-WebApp/main/public/favicon.svg" alt="Vibranium AI Logo" width="100" height="100" />
+  <img src="./public/favicon.svg" alt="Vibranium AI Logo" width="110" height="110" />
 
   <h2>Your Next-Generation Multimodal AI Companion</h2>
   <p>An ultra-modern, cross-platform AI assistant engineered with real-time translation, dynamic news intelligence, creative media generation, and persistent cloud sync.</p>
@@ -29,7 +29,7 @@ Get the official Android build of **Vibranium AI** immediately. Enjoy fluid anim
     <img src="https://img.shields.io/badge/📥_DOWNLOAD_APK-v1.0.1-00d2ff?style=for-the-badge&logo=android&logoColor=white" height="42" alt="Download APK" />
   </a>
   <br /><br />
-  <sub><i>Having trouble? You can also visit the <a href="https://github.com/Debraj-Pal/vibranium-ai/releases"><b>Releases Page</b></a> to browse all versions and changelogs.</i></sub>
+  <sub><i>Having trouble? You can also visit the <a href="https://github.com/Debraj-Pal/Vibranium-AI-WebApp/releases"><b>Releases Page</b></a> to browse all versions and changelogs.</i></sub>
 </div>
 
 ---
@@ -121,10 +121,10 @@ To set up and run Vibranium AI locally on your development machine:
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/Debraj-Pal/vibranium-ai.git
+git clone https://github.com/Debraj-Pal/Vibranium-AI-WebApp.git
 
 # 2. Navigate into the project folder
-cd vibranium-ai
+cd Vibranium-AI-WebApp
 
 # 3. Install dependencies
 npm install
@@ -141,5 +141,9 @@ Visit `http://localhost:3000` in your browser to view the application.
 
 ---
 
-Made with ❤️ by [Debraj Pal](https://github.com/Debraj-Pal)
-Thank you for checking out Vibranium AI! If you love the app, feel free to give this repository a ⭐.
+<div align="center">
+
+Made with ❤️ by [Debraj Pal](https://github.com/Debraj-Pal)  
+Thank you for checking out Vibranium AI! If you love the website/app, feel free to give this repository a ⭐.
+
+</div>
