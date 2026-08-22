@@ -72,8 +72,32 @@ export default function App() {
   // App Settings State
   const [settings, setSettings] = useState<UserSettings>(DEFAULT_SETTINGS);
 
+  const getInitialConversations = (): Conversation[] => {
+    try {
+      const lastUid = localStorage.getItem('vibranium_last_uid');
+      if (lastUid) {
+        const userSaved = localStorage.getItem(`vibranium_user_${lastUid}_conversations`);
+        if (userSaved) {
+          const parsed = JSON.parse(userSaved);
+          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        }
+      }
+      const generalCache = localStorage.getItem('vibranium_cached_conversations');
+      if (generalCache) {
+        const parsed = JSON.parse(generalCache);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+      const guestSaved = localStorage.getItem('vibranium_guest_conversations');
+      if (guestSaved) {
+        const parsed = JSON.parse(guestSaved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch (e) {}
+    return [];
+  };
+
   // Conversations History State
-  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [conversations, setConversations] = useState<Conversation[]>(getInitialConversations);
   const [currentChatId, setCurrentChatId] = useState<string | null>(null);
 
   // Monitor user login state & live sync plan from user's Firestore document
@@ -91,6 +115,16 @@ export default function App() {
 
       if (user) {
         setIsAuthOpen(false);
+        try {
+          localStorage.setItem('vibranium_last_uid', user.uid);
+          const cached = localStorage.getItem(`vibranium_user_${user.uid}_conversations`);
+          if (cached) {
+            const parsed = JSON.parse(cached);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              setConversations(parsed);
+            }
+          }
+        } catch (e) {}
 
         // Listen to Firestore doc /users/{user.uid} for account-specific subscription tier
         const userRef = doc(db, 'users', user.uid);
@@ -117,11 +151,26 @@ export default function App() {
           setUserPlan('free');
         });
       } else {
-        // Logged out / guest user: restore local guest plan from localStorage, clear current active chat and list
+        // Logged out / guest user: restore local guest plan from localStorage, load guest conversations
         const savedLocalPlan = localStorage.getItem('vibranium_user_plan');
         setUserPlan((savedLocalPlan as 'free' | 'pro' | 'max') || 'free');
         setCurrentChatId(null);
-        setConversations([]);
+        
+        try {
+          const guestLocal = localStorage.getItem('vibranium_guest_conversations');
+          if (guestLocal) {
+            const parsed = JSON.parse(guestLocal);
+            if (Array.isArray(parsed)) {
+              setConversations(parsed);
+            } else {
+              setConversations([]);
+            }
+          } else {
+            setConversations([]);
+          }
+        } catch (e) {
+          setConversations([]);
+        }
       }
     });
 
@@ -231,20 +280,23 @@ export default function App() {
 
           list.sort((a, b) => getConvTime(b) - getConvTime(a));
           
-          // Merge any local fallback conversations (with 'local_' prefix)
+          let finalList = list;
           const localKey = getConversationsKey();
           const local = localKey ? localStorage.getItem(localKey) : null;
           if (local) {
             try {
               const localList = JSON.parse(local) as Conversation[];
               const localConvs = localList.filter(c => c.id.startsWith('local_'));
-              setConversations([...localConvs, ...list]);
+              finalList = [...localConvs, ...list];
             } catch (e) {
-              setConversations(list);
+              finalList = list;
             }
-          } else {
-            setConversations(list);
           }
+          setConversations(finalList);
+          try {
+            localStorage.setItem(`vibranium_user_${currentUser.uid}_conversations`, JSON.stringify(finalList));
+            localStorage.setItem('vibranium_cached_conversations', JSON.stringify(finalList));
+          } catch (e) {}
         }, (err) => {
           console.error("Firestore conversations subscription error:", err);
           // Fallback to user-specific local storage
@@ -252,7 +304,8 @@ export default function App() {
           const local = localKey ? localStorage.getItem(localKey) : null;
           if (local) {
             try {
-              setConversations(JSON.parse(local));
+              const parsed = JSON.parse(local);
+              if (Array.isArray(parsed)) setConversations(parsed);
             } catch (e) {
               setConversations([]);
             }
@@ -265,7 +318,8 @@ export default function App() {
         const local = localKey ? localStorage.getItem(localKey) : null;
         if (local) {
           try {
-            setConversations(JSON.parse(local));
+            const parsed = JSON.parse(local);
+            if (Array.isArray(parsed)) setConversations(parsed);
           } catch (e) {
             setConversations([]);
           }
@@ -276,7 +330,13 @@ export default function App() {
       const local = localStorage.getItem('vibranium_guest_conversations');
       if (local) {
         try {
-          setConversations(JSON.parse(local));
+          const parsed = JSON.parse(local);
+          if (Array.isArray(parsed)) {
+            setConversations(parsed);
+            localStorage.setItem('vibranium_cached_conversations', JSON.stringify(parsed));
+          } else {
+            setConversations([]);
+          }
         } catch (e) {
           setConversations([]);
         }

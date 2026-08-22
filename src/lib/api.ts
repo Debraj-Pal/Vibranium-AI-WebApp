@@ -33,18 +33,9 @@ export function getApiUrl(endpoint: string): string {
     return `${FALLBACK_BACKEND_URL}${cleanEndpoint}`;
   }
 
-  // Web environments with local backend server (Cloud Run, AI Studio local preview, or Vite dev server)
-  if (
-    origin.includes('localhost') || 
-    origin.includes('127.0.0.1') || 
-    origin.includes('.run.app') || 
-    origin.includes('.ai.studio')
-  ) {
-    return cleanEndpoint;
-  }
-  
-  // Fallback production backend URL for Vercel / external hosts
-  return `${FALLBACK_BACKEND_URL}${cleanEndpoint}`;
+  // Web environments (Vercel, Cloud Run, AI Studio, local preview, custom domains)
+  // use relative same-origin routes directly.
+  return cleanEndpoint;
 }
 
 /**
