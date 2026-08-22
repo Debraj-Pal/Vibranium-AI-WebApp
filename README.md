@@ -2,14 +2,14 @@
 
 <div align="center">
 
-  <img src="https://raw.githubusercontent.com/Debraj-Pal/vibranium-ai/main/public/favicon.svg" alt="Vibranium AI Logo" width="100" height="100" />
+  <img src="https://raw.githubusercontent.com/Debraj-Pal/Vibranium-AI-WebApp/main/public/favicon.svg" alt="Vibranium AI Logo" width="100" height="100" />
 
   <h2>Your Next-Generation Multimodal AI Companion</h2>
   <p>An ultra-modern, cross-platform AI assistant engineered with real-time translation, dynamic news intelligence, creative media generation, and persistent cloud sync.</p>
 
   <p>
-    <a href="https://github.com/Debraj-Pal/vibranium-ai/releases/latest"><img src="https://img.shields.io/badge/Latest_Release-v1.0.1-00d2ff?style=for-the-badge&logo=android&logoColor=white" alt="Latest Release" /></a>
-    <a href="https://github.com/Debraj-Pal/vibranium-ai"><img src="https://img.shields.io/badge/Platform-Web%20%7C%20Android-7928CA?style=for-the-badge&logo=googlechrome&logoColor=white" alt="Platform" /></a>
+    <a href="https://github.com/Debraj-Pal/Vibranium-AI-WebApp/releases/latest"><img src="https://img.shields.io/badge/Latest_Release-v1.0.1-00d2ff?style=for-the-badge&logo=android&logoColor=white" alt="Latest Release" /></a>
+    <a href="https://github.com/Debraj-Pal/Vibranium-AI-WebApp"><img src="https://img.shields.io/badge/Platform-Web%20%7C%20Android-7928CA?style=for-the-badge&logo=googlechrome&logoColor=white" alt="Platform" /></a>
     <a href="https://www.typescriptlang.org/"><img src="https://img.shields.io/badge/Language-TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript" /></a>
     <a href="https://react.dev/"><img src="https://img.shields.io/badge/UI-React_19_%26_Tailwind-61DAFB?style=for-the-badge&logo=react&logoColor=black" alt="React 19" /></a>
     <a href="https://firebase.google.com/"><img src="https://img.shields.io/badge/Backend-Firebase_%26_Express-FFCA28?style=for-the-badge&logo=firebase&logoColor=black" alt="Firebase" /></a>
@@ -25,7 +25,7 @@ Get the official Android build of **Vibranium AI** immediately. Enjoy fluid anim
 
 <div align="center">
   <br />
-  <a href="https://github.com/Debraj-Pal/vibranium-ai/releases/latest/download/vibranium-ai.apk">
+  <a href="https://github.com/Debraj-Pal/Vibranium-AI-WebApp/releases/latest/download/vibranium-ai.apk">
     <img src="https://img.shields.io/badge/📥_DOWNLOAD_APK-v1.0.1-00d2ff?style=for-the-badge&logo=android&logoColor=white" height="42" alt="Download APK" />
   </a>
   <br /><br />
@@ -40,12 +40,12 @@ Discover the sleek, futuristic aesthetics of **Vibranium AI**, designed with obs
 
 | 💬 **AI Assistant Chat** | 🌐 **Live Language Translator** |
 | :---: | :---: |
-| <img src="https://raw.githubusercontent.com/Debraj-Pal/vibranium-ai/main/docs/screenshots/chat_screen.png" alt="Vibranium AI Chat" width="460"/> | <img src="https://raw.githubusercontent.com/Debraj-Pal/vibranium-ai/main/docs/screenshots/translator_screen.png" alt="Live Translator" width="460"/> |
+| <img src="https://raw.githubusercontent.com/Debraj-Pal/Vibranium-AI-WebApp/main/docs/screenshots/chat_screen.png" alt="Vibranium AI Chat" width="460"/> | <img src="https://raw.githubusercontent.com/Debraj-Pal/Vibranium-AI-WebApp/main/docs/screenshots/translator_screen.png" alt="Live Translator" width="460"/> |
 | *Intelligent conversational interface with dynamic model switching & prompt shortcuts* | *Instant real-time voice & text translation with auto language detection* |
 
 | 📰 **Vibranium Bulletin (Live News)** | 🎬 **Veo Video Lab & Studio** |
 | :---: | :---: |
-| <img src="https://raw.githubusercontent.com/Debraj-Pal/vibranium-ai/main/docs/screenshots/bulletin_screen.png" alt="Vibranium Bulletin" width="460"/> | <img src="https://raw.githubusercontent.com/Debraj-Pal/vibranium-ai/main/docs/screenshots/veo_lab_screen.png" alt="Veo Video Lab" width="460"/> |
+| <img src="https://raw.githubusercontent.com/Debraj-Pal/Vibranium-AI-WebApp/main/docs/screenshots/bulletin_screen.png" alt="Vibranium Bulletin" width="460"/> | <img src="https://raw.githubusercontent.com/Debraj-Pal/Vibranium-AI-WebApp/main/docs/screenshots/veo_lab_screen.png" alt="Veo Video Lab" width="460"/> |
 | *Real-time curated news intelligence, categories & summaries* | *High-fidelity generative video production and creative media studio* |
 
 ---
@@ -105,7 +105,7 @@ Vibranium AI combines modern frontend frameworks, native mobile wrappers, and cl
 ### 📱 Installing the Android APK Directly
 Since the app is distributed directly via GitHub Releases, follow these simple steps to install the `.apk` on any Android device:
 
-1. **Download the APK**: Click the [Download APK](https://github.com/Debraj-Pal/vibranium-ai/releases/latest/download/vibranium-ai.apk) button or choose a build from the [Releases Page](https://github.com/Debraj-Pal/vibranium-ai/releases).
+1. **Download the APK**: Click the [Download APK](https://github.com/Debraj-Pal/Vibranium-AI-WebApp/releases/latest/download/vibranium-ai.apk) button or choose a build from the [Releases Page](https://github.com/Debraj-Pal/Vibranium-AI-WebApp/releases).
 2. **Allow Installation from Unknown Sources**:
    - When opening the downloaded `.apk` file, Android may prompt for permission.
    - Tap **Settings** on the prompt.
