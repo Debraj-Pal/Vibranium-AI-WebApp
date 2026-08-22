@@ -70,6 +70,8 @@ jobs:
           fi
           echo "Syncing Capacitor plugins and web assets..."
           npx cap sync android
+          echo "Generating valid binary Android PNG icons and graphics..."
+          node scripts/generate_android_icons.cjs
 
       - name: Setup Keystore for Android Signing
         id: setup_keystore
