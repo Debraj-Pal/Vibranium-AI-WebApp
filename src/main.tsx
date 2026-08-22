@@ -3,19 +3,21 @@ import {createRoot} from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
 import { initFirebaseWithConfig } from './lib/firebase';
-import { getApiUrl } from './lib/api';
+import { safeApiFetch } from './lib/api';
 
 async function bootstrap() {
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 1500);
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
 
-    const res = await fetch(getApiUrl('/api/firebase-config'), { signal: controller.signal });
+    const res = await safeApiFetch('/api/firebase-config', { signal: controller.signal });
     clearTimeout(timeoutId);
 
-    if (res.ok) {
+    if (res && res.ok) {
       const config = await res.json();
-      await initFirebaseWithConfig(config);
+      if (config && (config.apiKey || config.projectId)) {
+        await initFirebaseWithConfig(config);
+      }
     }
   } catch (err) {
     console.warn("[Firebase] Failed to fetch runtime Firebase config, falling back to static defaults:", err);

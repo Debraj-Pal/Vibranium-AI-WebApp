@@ -844,7 +844,7 @@ export default function ChatArea({
   // AI-powered title generator (ChatGPT style)
   const generateAiTitleAsync = async (convId: string, userPrompt: string) => {
     try {
-      const res = await fetch(getApiUrl('/api/chat'), {
+      const res = await safeApiFetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

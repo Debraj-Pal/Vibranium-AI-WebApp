@@ -1123,7 +1123,14 @@ Need further details or a specific breakdown on a topic? Feel free to ask!`,
       });
     }
 
-    res.status(500).json({ error: error.message || "An error occurred during text generation." });
+    // Adaptive recovery response for unexpected backend errors
+    const lastUserMsg = (req.body.messages || []).filter((m: any) => m.role === "user").pop()?.content || "";
+    const cleanErr = cleanErrorText(error.message || String(error));
+    return res.json({
+      content: `I received your prompt: "${lastUserMsg}"\n\n⚠️ **System Status**: \`${cleanErr || 'Unexpected server error'}\`\n\n*If you are running the project on Vercel or external hosting, make sure \`GEMINI_API_KEY\` is added to your project's Environment Variables panel.*`,
+      modelUsed: "Vibranium AI (Adaptive Recovery)",
+      sources: []
+    });
   }
 });
 
@@ -1414,32 +1421,78 @@ function getTopicFallbackImage(headline: string): string {
   return 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&w=1200&q=80';
 }
 
-// Live Google News RSS Fetcher
+// Helper to format relative publication date and filter out stale news (> 7 days)
+function formatRelativePubDate(pubDateStr?: string): { label: string; isFresh: boolean } {
+  if (!pubDateStr) return { label: 'Today', isFresh: true };
+  const pubTime = new Date(pubDateStr).getTime();
+  if (isNaN(pubTime)) return { label: 'Today', isFresh: true };
+  const now = Date.now();
+  const diffMs = now - pubTime;
+
+  // Discard items older than 7 days
+  const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
+  if (diffMs > sevenDaysMs) {
+    return { label: 'Archived', isFresh: false };
+  }
+
+  const diffMins = Math.floor(diffMs / (60 * 1000));
+  if (diffMins < 60) {
+    return { label: `${Math.max(1, diffMins)}m ago`, isFresh: true };
+  }
+  const diffHours = Math.floor(diffMs / (60 * 60 * 1000));
+  if (diffHours < 24) {
+    return { label: `${diffHours}h ago`, isFresh: true };
+  }
+  const diffDays = Math.floor(diffMs / (24 * 60 * 60 * 1000));
+  if (diffDays === 1) {
+    return { label: 'Yesterday', isFresh: true };
+  }
+  return { label: `${diffDays}d ago`, isFresh: true };
+}
+
+// Live Google News RSS Fetcher with 1-day / 7-day recency filter
 async function fetchLiveRssNews(category: string) {
-  const queryMap: Record<string, string> = {
-    all: 'India+breaking+news',
-    india: 'Pralhad+Joshi+Education+Minister+OR+India+news',
-    global: 'World+breaking+news+current+affairs',
-    markets: 'NIFTY+50+SENSEX+stock+market+news',
-    sports: 'India+cricket+T20+sports+news',
-    tech: 'AI+quantum+computing+technology+news',
-    science: 'ISRO+space+science+news',
-    affairs: 'Supreme+Court+India+legal+news'
+  const queryMap1d: Record<string, string> = {
+    all: 'top+breaking+news+India+OR+World+when:1d',
+    india: 'India+top+breaking+news+national+when:1d',
+    global: 'World+top+breaking+news+international+when:1d',
+    markets: 'stock+market+NIFTY+SENSEX+business+economy+when:1d',
+    sports: 'sports+cricket+football+match+tournament+when:1d',
+    tech: 'technology+AI+software+chips+gadgets+when:1d',
+    science: 'space+astronomy+science+discovery+when:1d',
+    affairs: 'Supreme+Court+legal+government+policy+news+when:1d'
   };
 
-  const searchQuery = queryMap[category] || 'India+breaking+news';
-  const rssUrl = `https://news.google.com/rss/search?q=${searchQuery}&hl=en-IN&gl=IN&ceid=IN:en`;
+  const queryMap7d: Record<string, string> = {
+    all: 'top+breaking+news+India+OR+World+when:7d',
+    india: 'India+top+news+national+when:7d',
+    global: 'World+top+news+international+when:7d',
+    markets: 'stock+market+NIFTY+SENSEX+business+when:7d',
+    sports: 'sports+cricket+football+tournament+when:7d',
+    tech: 'technology+AI+software+tech+news+when:7d',
+    science: 'space+astronomy+science+news+when:7d',
+    affairs: 'Supreme+Court+legal+national+news+when:7d'
+  };
 
-  try {
+  const parseFeed = async (query: string) => {
+    const rssUrl = `https://news.google.com/rss/search?q=${query}&hl=en-IN&gl=IN&ceid=IN:en`;
     const res = await fetch(rssUrl);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const xml = await res.text();
 
     const matches = Array.from(xml.matchAll(/<item>[\s\S]*?<title>(.*?)<\/title>[\s\S]*?<link>(.*?)<\/link>[\s\S]*?<pubDate>(.*?)<\/pubDate>[\s\S]*?<source[^>]*?>(.*?)<\/source>[\s\S]*?<\/item>/g));
 
-    const sliceMatches = matches.slice(0, 10);
+    const freshMatches: any[] = [];
+    for (const m of matches) {
+      const pubDate = m[3]?.trim();
+      const { label, isFresh } = formatRelativePubDate(pubDate);
+      if (isFresh) {
+        freshMatches.push({ match: m, timeLabel: label });
+      }
+      if (freshMatches.length >= 10) break;
+    }
 
-    const items = await Promise.all(sliceMatches.map(async (m, idx) => {
+    return await Promise.all(freshMatches.map(async ({ match: m, timeLabel }, idx) => {
       const fullTitle = m[1].replace(/<!\[CDATA\[(.*?)\]\]>/, '$1').replace(/&amp;/g, '&').replace(/&quot;/g, '"').trim();
       const link = m[2].trim();
       const sourceName = m[4].replace(/<!\[CDATA\[(.*?)\]\]>/, '$1').replace(/&amp;/g, '&').trim();
@@ -1453,15 +1506,25 @@ async function fetchLiveRssNews(category: string) {
         summary: `Live report from ${sourceName}: ${cleanTitle}. Read verified live coverage directly on the source network.`,
         source: sourceName,
         sourceUrl: link,
-        time: 'Just now',
+        time: timeLabel || 'Today',
         category: category === 'all' ? 'india' : category,
         imageUrl: imgUrl,
         sourcesCount: Math.floor(Math.random() * 30) + 15
       };
     }));
+  };
 
-    if (items.length > 0) {
+  try {
+    const query1d = queryMap1d[category] || 'India+top+breaking+news+when:1d';
+    const items = await parseFeed(query1d);
+    if (items.length >= 4) {
       return items;
+    }
+    // If 1-day query yielded few items, fallback to 7-day query
+    const query7d = queryMap7d[category] || 'India+top+breaking+news+when:7d';
+    const items7d = await parseFeed(query7d);
+    if (items7d.length > 0) {
+      return items7d;
     }
   } catch (e) {
     console.warn("Failed to parse Google News RSS:", e);
@@ -1475,8 +1538,8 @@ function getLiveCuratedNewsData(category: string, city: string = 'Kolkata') {
   const allNews = [
     {
       id: 'news-hero-1',
-      title: "Defence Minister Rajnath Singh addresses troops in Dras on Kargil Vijay Diwas eve, warning against border infiltration",
-      summary: "Addressing military personnel and veterans in Dras, Jammu & Kashmir, the Defence Minister declared that India's armed forces stand fully prepared with unmatched defensive capabilities, warning that any cross-border infiltration attempt will receive a resolute response.",
+      title: "India advances strategic technology and national infrastructure corridors with multi-sector investments",
+      summary: "National authorities and industry leaders unveiled major expansion plans today for high-speed transit corridors, advanced defense manufacturing, and sovereign tech clusters across Indian states.",
       source: 'The Hindu & PIB',
       sourceUrl: 'https://www.thehindu.com/news/national',
       time: 'Published 2 hours ago',
@@ -1487,8 +1550,8 @@ function getLiveCuratedNewsData(category: string, city: string = 'Kolkata') {
     },
     {
       id: 'news-pj-2',
-      title: "Pralhad Joshi takes charge as Union Minister for Education & Consumer Affairs in cabinet portfolio reshuffle",
-      summary: "Union Minister Pralhad Joshi officially assumed office today at Shastri Bhawan, outlining priority initiatives for expanding digital skill hubs, upgrading university infrastructure, and implementing national education reforms across Indian states.",
+      title: "Union Ministry launches national digital skill hubs and modernized university computing labs",
+      summary: "The Ministry announced new partnerships with premier technology institutes to establish specialized laboratories for artificial intelligence, quantum algorithms, and next-generation engineering education.",
       source: 'ANI & Press Information Bureau',
       sourceUrl: 'https://pib.gov.in',
       time: '3 hours ago',
@@ -1498,10 +1561,10 @@ function getLiveCuratedNewsData(category: string, city: string = 'Kolkata') {
     },
     {
       id: 'news-dj-3',
-      title: "David Jonsson cast as new Black Panther at San Diego Comic-Con Marvel Studios Hall H showcase",
-      summary: "Marvel Studios CEO Kevin Feige officially introduced actor David Jonsson to thousands of cheering fans in Hall H, confirming his starring role in the upcoming Black Panther franchise chapter.",
-      source: 'Variety & Marvel Studios',
-      sourceUrl: 'https://www.marvel.com',
+      title: "Global technology summits showcase next-generation sovereign AI models and edge computing chips",
+      summary: "Leading tech enterprises and researchers demonstrated ultra-efficient AI processing units and secure open-source foundation models designed for enterprise and consumer devices.",
+      source: 'Reuters Tech & Variety',
+      sourceUrl: 'https://www.reuters.com/technology',
       time: '4 hours ago',
       category: 'global',
       imageUrl: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=800&q=80',
@@ -1509,8 +1572,8 @@ function getLiveCuratedNewsData(category: string, city: string = 'Kolkata') {
     },
     {
       id: 'news-sc-4',
-      title: "Supreme Court Justice Ujjal Bhuyan warns democratic space for constructive dissent must be safeguarded",
-      summary: "Delivering the landmark Constitutional Law Memorial Lecture, Supreme Court Justice Bhuyan emphasized that protecting constitutional liberties and democratic space for speech is vital for judicial integrity and nation building.",
+      title: "Supreme Court highlights digital transparency and expedited citizen grievance mechanisms",
+      summary: "Addressing national legal delegates, the Supreme Court bench underscored advancements in the e-Courts platform, ensuring faster case listings and equal access to constitutional remedies.",
       source: 'Bar and Bench & LiveLaw',
       sourceUrl: 'https://www.barandbench.com',
       time: '5 hours ago',
@@ -1520,8 +1583,8 @@ function getLiveCuratedNewsData(category: string, city: string = 'Kolkata') {
     },
     {
       id: 'news-5',
-      title: "Union Budget 2026-27 impact: Indian Stock Markets react with broad rallies in IT, Green Energy, and Infrastructure sectors",
-      summary: "NIFTY 50 and SENSEX surged today following new capital expenditure announcements and tax policy relaxations targeting manufacturing hubs and renewable energy corridors across India.",
+      title: "Stock Markets rally as IT, green energy, and infrastructure indices post solid weekly gains",
+      summary: "NIFTY 50 and SENSEX climbed steadily with strong institutional inflows targeting renewable energy developers, domestic electronics manufacturing, and software exporters.",
       source: 'Economic Times',
       sourceUrl: 'https://economictimes.indiatimes.com',
       time: '6 hours ago',
@@ -1531,8 +1594,8 @@ function getLiveCuratedNewsData(category: string, city: string = 'Kolkata') {
     },
     {
       id: 'news-6',
-      title: "India T20 International Series victory: Explosive batting partnership secures dramatic final match win",
-      summary: "India sealed the bilateral series with a dominant top-order performance in Mumbai, setting a formidable total and restricting the opposition with disciplined death bowling.",
+      title: "India Cricket & Sports squads intensify preparations for upcoming international tournament series",
+      summary: "National squads commenced high-intensity training camps with dynamic team selections, focusing on explosive batting depth and precision bowling under newly introduced match strategies.",
       source: 'Cricbuzz & BCCI',
       sourceUrl: 'https://www.bcci.tv',
       time: 'Today',
@@ -1542,8 +1605,8 @@ function getLiveCuratedNewsData(category: string, city: string = 'Kolkata') {
     },
     {
       id: 'news-7',
-      title: "AI & Quantum Computing Summit: Global Tech leaders pledge joint standards for safe frontier AI deployment",
-      summary: "Ministers and chief technology officers from 30 nations finalized a unified framework to ensure watermarking, deepfake mitigation, and secure cloud infrastructure.",
+      title: "AI & Quantum Computing Summit: Tech leaders agree on international safety and benchmarking standards",
+      summary: "Technology delegates from 30 nations finalized unified safety protocols, including watermarking standards, open verification benchmarks, and resilient data privacy frameworks.",
       source: 'Reuters Tech',
       sourceUrl: 'https://www.reuters.com/technology',
       time: 'Today',
@@ -1553,8 +1616,8 @@ function getLiveCuratedNewsData(category: string, city: string = 'Kolkata') {
     },
     {
       id: 'news-8',
-      title: "ISRO prepares for next-generation satellite launch with heavy-lift rocket test firing at Sriharikota",
-      summary: "Indian Space Research Organisation successfully completed cryogenic engine qualification trials for upcoming earth observation and deep-space missions.",
+      title: "ISRO prepares for next-generation satellite launch with heavy-lift qualification trials at Sriharikota",
+      summary: "Indian Space Research Organisation successfully completed engine and payload integration tests for upcoming earth observation and scientific research missions.",
       source: 'ISRO Media Centre',
       sourceUrl: 'https://www.isro.gov.in',
       time: 'Yesterday',
@@ -2020,13 +2083,19 @@ app.get("/api/news", async (req, res) => {
           ? `Live Scraped RSS Context:\n` + rssItems.map((it, idx) => `[Doc ${idx+1}] ${it.title} | Source: ${it.source} | Link: ${it.sourceUrl}`).join('\n')
           : `No RSS feeds found for category: ${category}`;
 
+        const currentDateStr = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
         const prompt = `You are Vibranium AI RAG Intelligence Engine (similar to Perplexity AI Real-Time News).
-Synthesize real-time news for category: "${category}".
+Synthesize real-time news for category: "${category}" as of today (${currentDateStr}).
+
+CRITICAL RECENCY CONSTRAINT:
+- ONLY include fresh, real-world news stories that occurred within the past 24 hours to 7 days.
+- NEVER include old news stories from several months ago.
+- All timestamps MUST be relative (e.g. "2 hours ago", "5 hours ago", "Today", "Yesterday", "2 days ago").
 
 Use the following Live Scraped Web Context as your primary verified ground truth:
 ${rssContext}
 
-Perform additional Google Search grounding if needed for real-time accuracy today (July 26, 2026).
+Perform additional Google Search grounding if needed for real-time accuracy today (${currentDateStr}).
 
 Return ONLY a raw JSON object (no markdown, no backticks, pure JSON):
 {
