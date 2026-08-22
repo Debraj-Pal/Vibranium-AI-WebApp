@@ -21,15 +21,17 @@
 
 ## ⬇️ Download Latest APK
 
-Get the official Android build of **Vibranium AI** immediately. Enjoy fluid animations, low-latency multimodal AI responses, voice synthesis, and native mobile controls.
+Get the official Android build of **Vibranium AI** directly on your device. Experience fluid UI animations, low-latency multimodal AI responses, voice synthesis, live camera scanning, and native mobile performance.
 
 <div align="center">
   <br />
-  <a href="https://github.com/Debraj-Pal/Vibranium-AI-WebApp/releases/latest/download/vibranium-ai.apk">
-    <img src="https://img.shields.io/badge/📥_DOWNLOAD_APK-v1.0.1-00d2ff?style=for-the-badge&logo=android&logoColor=white" height="42" alt="Download APK" />
+  <a href="https://github.com/Debraj-Pal/Vibranium-AI-WebApp/releases">
+    <img src="https://img.shields.io/badge/📥_DOWNLOAD_APK-Releases_Page-00d2ff?style=for-the-badge&logo=android&logoColor=white" height="42" alt="Download APK" />
   </a>
   <br /><br />
-  <sub><i>Having trouble? You can also visit the <a href="https://github.com/Debraj-Pal/Vibranium-AI-WebApp/releases"><b>Releases Page</b></a> to browse all versions and changelogs.</i></sub>
+  <sub>👉 <b>Click the button above to go to the Releases page</b> and download <code>VibraniumAI-v1.0.1.apk</code> or the latest version.</sub>
+  <br />
+  <sub><i>You can also download automated build artifacts from the <a href="https://github.com/Debraj-Pal/Vibranium-AI-WebApp/actions"><b>GitHub Actions Tab</b></a> under the latest Android build run.</i></sub>
 </div>
 
 ---

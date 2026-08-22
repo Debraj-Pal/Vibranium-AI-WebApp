@@ -136,6 +136,11 @@ jobs:
             find android/app/build/outputs/bundle/ -name "*.aab" -exec cp {} release-assets/VibraniumAI-${TAG_NAME}.aab \; || true
           fi
 
+          # Also create direct generic copy 'vibranium-ai.apk' for direct README links
+          if [ -f "release-assets/VibraniumAI-${TAG_NAME}.apk" ]; then
+            cp "release-assets/VibraniumAI-${TAG_NAME}.apk" "release-assets/vibranium-ai.apk"
+          fi
+
           ls -la release-assets/
 
       - name: Publish GitHub Release
